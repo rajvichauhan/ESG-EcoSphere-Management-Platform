@@ -78,11 +78,41 @@ async def get_department_rollup(
     db = Depends(get_db),
 ):
     """Compute and retrieve the live rolled-up carbon and ESG metrics for the department subtree."""
-    if not ObjectId.is_valid(id):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid department ID")
-    dept_id = ObjectId(id)
+    if id == "root":
+        # Resolve to the actual root department of the user's organization
+        root_dept = await db.departments.find_one(
+            {"org_id": user["org_id"], "$or": [{"parent_id": None}, {"parent_id": {"$exists": False}}]}
+        )
+        if not root_dept:
+            from datetime import timezone
+            # Create a default root department for the organization
+            root_doc = {
+                "org_id": user["org_id"],
+                "name": "Corporate Headquarters",
+                "code": "HQ",
+                "parent_id": None,
+                "ancestors": [],
+                "head_user_id": None,
+                "employee_count": 50,
+                "status": "active",
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+            }
+            res = await db.departments.insert_one(root_doc)
+            root_doc["_id"] = res.inserted_id
+            root_dept = root_doc
+
+        dept_id = root_dept["_id"]
+        # Use str representation so department_service gets the real ID
+        id = str(dept_id)
+    else:
+        if not ObjectId.is_valid(id):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid department ID")
+        dept_id = ObjectId(id)
+
     # Check permission
     await check_department_permission(user, dept_id)
+
     rollup = await department_service.get_rollup(
         db,
         user["org_id"],

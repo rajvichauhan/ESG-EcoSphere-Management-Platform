@@ -123,19 +123,41 @@ export function handleHardLogout() {
   }
 }
 
-export function mapApiError(error: AxiosError<{ detail?: string; message?: string }>): ApiError {
+export function mapApiError(error: AxiosError<{ detail?: any; message?: string }>): ApiError {
   // `offline` = the request never received an HTTP response (server unreachable,
   // DNS failure, timeout, CORS block). This is the ONLY condition under which the
   // explicit offline/mock fallback may serve local data. A real 4xx/5xx from the
   // server is NOT offline and must surface to the UI unchanged.
   const offline = !error.response;
   const status = error.response?.status || 0;
-  const detail =
-    error.response?.data?.detail ||
-    error.response?.data?.message ||
-    (offline
-      ? 'Could not reach the server. Check your connection and try again.'
-      : error.message) ||
-    'An unexpected error occurred while processing the request.';
+  
+  const detailVal = error.response?.data?.detail || error.response?.data?.message;
+  let detail = '';
+
+  if (detailVal) {
+    if (typeof detailVal === 'string') {
+      detail = detailVal;
+    } else if (Array.isArray(detailVal)) {
+      // FastAPI validation errors look like: [{"loc":["query","year"],"msg":"field required","type":"value_error.missing"}]
+      detail = detailVal
+        .map((err: any) => {
+          const loc = err.loc ? err.loc.join('.') : '';
+          const msg = err.msg || 'Validation error';
+          return loc ? `${loc}: ${msg}` : msg;
+        })
+        .join(', ');
+    } else if (typeof detailVal === 'object') {
+      detail = JSON.stringify(detailVal);
+    } else {
+      detail = String(detailVal);
+    }
+  } else {
+    detail =
+      (offline
+        ? 'Could not reach the server. Check your connection and try again.'
+        : error.message) ||
+      'An unexpected error occurred while processing the request.';
+  }
+
   return { status, detail, offline };
 }

@@ -15,7 +15,7 @@ export const DashboardPage: React.FC<{ onNavigate: (route: string) => void }> = 
     setError(null);
     try {
       const [ovRes, deptsRes] = await Promise.all([
-        esgScoreApi.getOverview(),
+        esgScoreApi.getOverview({ year: 2026, month: 6 }),
         departmentsApi.list({ year: 2026, month: 6 }),
       ]);
       setOverview(ovRes);

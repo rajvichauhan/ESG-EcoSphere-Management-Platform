@@ -155,6 +155,20 @@ async def test_phase_11_hierarchy(test_data):
         assert res_head.status_code == 200
         assert res_head.json()["head_user_id"] == str(test_data["emp_id"])
 
+        # 7. Rollup for a specific department (should fail with 422 if year is missing)
+        res_rollup_422 = await ac.get(f"/api/departments/{root_id}/rollup", headers=headers)
+        assert res_rollup_422.status_code == 422
+
+        # 8. Rollup for specific department (successful)
+        res_rollup = await ac.get(f"/api/departments/{root_id}/rollup?year=2026", headers=headers)
+        assert res_rollup.status_code == 200
+        assert res_rollup.json()["department_id"] == root_id
+
+        # 9. Rollup for 'root' department (successful)
+        res_root_rollup = await ac.get(f"/api/departments/root/rollup?year=2026", headers=headers)
+        assert res_root_rollup.status_code == 200
+        assert res_root_rollup.json()["department_id"] == root_id
+
 
 # ---------------------------------------------------------------------------
 # Phase 12 Tests — Facility & Office Carbon
