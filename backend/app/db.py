@@ -21,10 +21,20 @@ _mongo = _Mongo()
 
 async def connect() -> None:
     settings = get_settings()
+    uri = settings.mongodb_uri
     _mongo.client = AsyncIOMotorClient(
-        settings.mongodb_uri, serverSelectionTimeoutMS=3000
+        uri, serverSelectionTimeoutMS=1500
     )
     _mongo.db = _mongo.client[settings.mongodb_db]
+    
+    # Verify replica set connectivity. Fallback to standalone if unreachable.
+    try:
+        await _mongo.client.admin.command("ping")
+    except Exception:
+        if "replicaSet=" in uri:
+            clean_uri = uri.split("?")[0]
+            _mongo.client = AsyncIOMotorClient(clean_uri, serverSelectionTimeoutMS=1500)
+            _mongo.db = _mongo.client[settings.mongodb_db]
 
 
 async def close() -> None:

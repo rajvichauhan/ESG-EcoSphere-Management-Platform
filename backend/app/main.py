@@ -10,7 +10,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import db
 from app.config import get_settings
-from app.routers import health
+from app.indexes import ensure_indexes
+from app.routers import (
+    health,
+    departments,
+    facilities,
+    city_profiles,
+    products,
+    carbon_reference,
+    product_sales,
+    allocations,
+    product_links,
+    sub_admins,
+)
 
 
 @asynccontextmanager
@@ -18,6 +30,11 @@ async def lifespan(app: FastAPI):
     # Startup: open the Mongo connection. The app still boots if Mongo is down;
     # /health reports connectivity so the foundation is observable either way.
     await db.connect()
+    try:
+        await ensure_indexes()
+        print("MongoDB indexes verified successfully.")
+    except Exception as exc:
+        print(f"Error establishing MongoDB indexes: {exc}")
     yield
     # Shutdown
     await db.close()
@@ -29,13 +46,23 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],  # Vite dev server
+        allow_origins=["http://localhost:5173", "http://localhost:3000"],  # React dev servers
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     app.include_router(health.router, prefix=settings.api_prefix)
+    app.include_router(departments.router, prefix=settings.api_prefix)
+    app.include_router(facilities.router, prefix=settings.api_prefix)
+    app.include_router(city_profiles.router, prefix=settings.api_prefix)
+    app.include_router(products.router, prefix=settings.api_prefix)
+    app.include_router(carbon_reference.router, prefix=settings.api_prefix)
+    app.include_router(product_sales.router, prefix=settings.api_prefix)
+    app.include_router(allocations.router, prefix=settings.api_prefix)
+    app.include_router(product_links.router, prefix=settings.api_prefix)
+    app.include_router(sub_admins.router, prefix=settings.api_prefix)
+    app.include_router(sub_admins.me_router, prefix=settings.api_prefix)
 
     @app.get("/")
     async def root() -> dict:
