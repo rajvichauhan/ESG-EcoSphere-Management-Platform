@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import re
 from typing import Optional
 from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 
 from app.models.common import utcnow
 
@@ -20,7 +22,7 @@ async def list_city_profiles(
     if country:
         query["country"] = country.upper()
     if city:
-        query["city"] = {"$regex": f"^{city}$", "$options": "i"}
+        query["city"] = {"$regex": f"^{re.escape(city)}$", "$options": "i"}
     if year:
         query["year"] = year
 
@@ -56,7 +58,13 @@ async def create_city_profile(db: AsyncIOMotorDatabase, user: dict, data) -> dic
         "created_at": now,
         "updated_at": now,
     }
-    res = await db.city_profiles.insert_one(doc)
+    try:
+        res = await db.city_profiles.insert_one(doc)
+    except DuplicateKeyError:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"City profile for {data.city}, {data.country} in {data.year} already exists",
+        )
     doc["_id"] = res.inserted_id
     return doc
 
@@ -120,7 +128,7 @@ async def find_city_profile(
     """
     profiles = await db.city_profiles.find({
         "country": country.upper(),
-        "city": {"$regex": f"^{city}$", "$options": "i"},
+        "city": {"$regex": f"^{re.escape(city)}$", "$options": "i"},
     }).sort([("year", -1)]).to_list(100)
 
     if not profiles:

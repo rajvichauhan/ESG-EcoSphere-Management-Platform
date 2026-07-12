@@ -13,6 +13,7 @@ from app.models.facility import (
     FacilityCreate,
     FacilityUpdate,
     FacilityDocument,
+    FacilityCreateResponse,
     FacilityReadingCreate,
     FacilityReadingDocument,
 )
@@ -21,19 +22,7 @@ from app.services import facility as facility_service
 router = APIRouter(prefix="/facilities", tags=["facilities"])
 
 
-def _serialize(doc):
-    """Recursively convert ObjectId and datetime objects for clean serialization."""
-    if doc is None:
-        return None
-    if isinstance(doc, list):
-        return [_serialize(d) for d in doc]
-    if isinstance(doc, dict):
-        return {k: _serialize(v) for k, v in doc.items()}
-    if isinstance(doc, ObjectId):
-        return str(doc)
-    if isinstance(doc, datetime):
-        return doc.isoformat()
-    return doc
+from app.utils import serialize_doc as _serialize
 
 
 @router.get("", response_model=list[FacilityDocument])
@@ -48,7 +37,7 @@ async def list_org_facilities(
     return _serialize(facs)
 
 
-@router.post("", response_model=FacilityDocument, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=FacilityCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_facility(
     data: FacilityCreate,
     user: dict = Depends(get_current_user),

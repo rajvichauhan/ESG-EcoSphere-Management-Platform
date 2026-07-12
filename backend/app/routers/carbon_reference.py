@@ -20,19 +20,7 @@ from app.services import carbon_reference as carbon_reference_service
 router = APIRouter(prefix="/carbon-reference", tags=["carbon-reference"])
 
 
-def _serialize(doc):
-    """Recursively convert ObjectId and datetime objects for clean serialization."""
-    if doc is None:
-        return None
-    if isinstance(doc, list):
-        return [_serialize(d) for d in doc]
-    if isinstance(doc, dict):
-        return {k: _serialize(v) for k, v in doc.items()}
-    if isinstance(doc, ObjectId):
-        return str(doc)
-    if isinstance(doc, datetime):
-        return doc.isoformat()
-    return doc
+from app.utils import serialize_doc as _serialize
 
 
 @router.get("", response_model=list[CarbonReferenceDocument])

@@ -7,7 +7,7 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.auth import check_department_permission
+from app.auth import require_manage_permission
 from app.models.common import utcnow
 from app.services.city_profile import find_city_profile
 
@@ -41,8 +41,7 @@ async def create_facility(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
     org_id = user["org_id"]
     dept_id = ObjectId(str(data.department_id)) if data.department_id else None
 
-    if dept_id:
-        await check_department_permission(user, dept_id)
+    await require_manage_permission(user, dept_id)
 
     now = utcnow()
     doc = {
@@ -83,9 +82,8 @@ async def update_facility(db: AsyncIOMotorDatabase, user: dict, facility_id_str:
     facility_id = ObjectId(facility_id_str)
     fac = await get_facility(db, org_id, facility_id_str)
 
-    # Permission check on current dept
-    if fac.get("department_id"):
-        await check_department_permission(user, fac["department_id"])
+    # Permission check on current dept (org-level ⇒ admin only)
+    await require_manage_permission(user, fac.get("department_id"))
 
     updates = {}
     if data.name is not None:
@@ -101,7 +99,7 @@ async def update_facility(db: AsyncIOMotorDatabase, user: dict, facility_id_str:
 
     if data.department_id is not None:
         new_dept = ObjectId(str(data.department_id))
-        await check_department_permission(user, new_dept)
+        await require_manage_permission(user, new_dept)
         updates["department_id"] = new_dept
 
     if updates:
@@ -116,8 +114,7 @@ async def close_facility(db: AsyncIOMotorDatabase, user: dict, facility_id_str: 
     facility_id = ObjectId(facility_id_str)
     fac = await get_facility(db, org_id, facility_id_str)
 
-    if fac.get("department_id"):
-        await check_department_permission(user, fac["department_id"])
+    await require_manage_permission(user, fac.get("department_id"))
 
     await db.facilities.update_one(
         {"_id": facility_id},
@@ -135,8 +132,7 @@ async def log_reading(db: AsyncIOMotorDatabase, user: dict, facility_id_str: str
     facility_id = ObjectId(facility_id_str)
     fac = await get_facility(db, org_id, facility_id_str)
 
-    if fac.get("department_id"):
-        await check_department_permission(user, fac["department_id"])
+    await require_manage_permission(user, fac.get("department_id"))
 
     period = data.period
     inputs = data.inputs

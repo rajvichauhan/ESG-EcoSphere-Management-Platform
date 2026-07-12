@@ -19,19 +19,7 @@ from app.services import city_profile as city_profile_service
 router = APIRouter(prefix="/city-profiles", tags=["city-profiles"])
 
 
-def _serialize(doc):
-    """Recursively convert ObjectId and datetime objects for clean serialization."""
-    if doc is None:
-        return None
-    if isinstance(doc, list):
-        return [_serialize(d) for d in doc]
-    if isinstance(doc, dict):
-        return {k: _serialize(v) for k, v in doc.items()}
-    if isinstance(doc, ObjectId):
-        return str(doc)
-    if isinstance(doc, datetime):
-        return doc.isoformat()
-    return doc
+from app.utils import serialize_doc as _serialize
 
 
 @router.get("", response_model=list[CityProfileResponse])

@@ -16,19 +16,7 @@ router = APIRouter(prefix="/admin/sub-admins", tags=["sub-admins"])
 me_router = APIRouter(prefix="/me", tags=["me"])
 
 
-def _serialize(doc):
-    """Recursively convert ObjectId and datetime objects for clean serialization."""
-    if doc is None:
-        return None
-    if isinstance(doc, list):
-        return [_serialize(d) for d in doc]
-    if isinstance(doc, dict):
-        return {k: _serialize(v) for k, v in doc.items()}
-    if isinstance(doc, ObjectId):
-        return str(doc)
-    if isinstance(doc, datetime):
-        return doc.isoformat()
-    return doc
+from app.utils import serialize_doc as _serialize
 
 
 from pydantic import BaseModel
@@ -46,7 +34,7 @@ async def grant_sub_admin_scope(
     db = Depends(get_db),
 ):
     """Grant sub-admin region or sector scope to a user. Master Admin only."""
-    res = await sub_admin_service.grant_scope(db, str(data.user_id), data.scope)
+    res = await sub_admin_service.grant_scope(db, user["org_id"], str(data.user_id), data.scope)
     return _serialize(res)
 
 
@@ -59,7 +47,7 @@ async def revoke_sub_admin_scope(
     db = Depends(get_db),
 ):
     """Revoke sub-admin scope from a user. Master Admin only."""
-    res = await sub_admin_service.revoke_scope(db, user_id, kind, values)
+    res = await sub_admin_service.revoke_scope(db, user["org_id"], user_id, kind, values)
     return _serialize(res)
 
 

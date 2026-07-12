@@ -39,7 +39,7 @@ class ProductUpdate(BaseModel):
     production_city: Optional[str] = Field(None, min_length=1)
     unit_price: Optional[MoneyField] = None
     department_id: Optional[PyObjectId] = None
-    status: Optional[str] = None
+    status: Optional[str] = Field(None, pattern="^(active|discontinued)$")
 
 
 class ProductDocument(OrgScopedDocument):

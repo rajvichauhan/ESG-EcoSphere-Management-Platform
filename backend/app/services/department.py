@@ -12,8 +12,9 @@ from typing import Any, Optional
 from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 
-from app.auth import check_department_permission, has_role
+from app.auth import has_role, require_manage_permission
 from app.models.common import utcnow
 
 
@@ -50,6 +51,21 @@ async def _add_role_if_absent(db: AsyncIOMotorDatabase, user_id: ObjectId, role_
     )
 
 
+async def _assert_archivable(db: AsyncIOMotorDatabase, org_id: ObjectId, dept_id: ObjectId) -> None:
+    """Raise 409 if a department cannot be archived because it still has active
+    child departments or users assigned to it. Shared by DELETE and the PATCH
+    status→archived path so archiving can never bypass these integrity checks."""
+    active_child = await db.departments.find_one(
+        {"org_id": org_id, "parent_id": dept_id, "status": "active"},
+    )
+    if active_child:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Archive or reassign child departments first")
+
+    assigned = await db.users.find_one({"org_id": org_id, "department_id": dept_id})
+    if assigned:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Reassign users from this department first")
+
+
 # ---------------------------------------------------------------------------
 # CREATE
 # ---------------------------------------------------------------------------
@@ -69,8 +85,13 @@ async def create_department(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
         if not has_role(user, "master_admin", "org_admin"):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Only admins can create root departments")
     else:
-        # Sub-department — admin OR self-service under own subtree
+        # Sub-department — admin OR self-service by a dept_head under own subtree
         if not has_role(user, "master_admin", "org_admin"):
+            if not has_role(user, "dept_head"):
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN,
+                    "Requires an org_admin, master_admin, or dept_head role",
+                )
             user_dept = user.get("department_id")
             if not user_dept:
                 raise HTTPException(status.HTTP_403_FORBIDDEN, "No department assignment")
@@ -112,7 +133,11 @@ async def create_department(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
         "created_at": now,
         "updated_at": now,
     }
-    result = await db.departments.insert_one(doc)
+    try:
+        result = await db.departments.insert_one(doc)
+    except DuplicateKeyError:
+        # Lost a race against a concurrent identical create
+        raise HTTPException(status.HTTP_409_CONFLICT, f"A sibling department named '{data.name}' already exists")
     doc["_id"] = result.inserted_id
     return doc
 
@@ -130,8 +155,8 @@ async def update_department(db: AsyncIOMotorDatabase, user: dict, dept_id_str: s
     dept_id = _oid(dept_id_str)
     dept = await _load_dept(db, org_id, dept_id)
 
-    # Permission
-    await check_department_permission(user, dept_id)
+    # Permission (write) — admin, or dept_head within this subtree
+    await require_manage_permission(user, dept_id)
 
     updates: dict[str, Any] = {}
     now = utcnow()
@@ -150,6 +175,20 @@ async def update_department(db: AsyncIOMotorDatabase, user: dict, dept_id_str: s
             raise HTTPException(status.HTTP_409_CONFLICT, "Cycle detected: new parent is a descendant")
 
         new_parent = await _load_dept(db, org_id, new_parent_id)
+
+        # Sibling-name collision under the NEW parent (the unique index would
+        # otherwise raise an unhandled DuplicateKeyError → 500 on the update).
+        effective_name = data.name if data.name is not None else dept["name"]
+        clash = await db.departments.find_one({
+            "org_id": org_id, "parent_id": new_parent_id,
+            "name": effective_name, "_id": {"$ne": dept_id},
+        })
+        if clash:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                f"A department named '{effective_name}' already exists under the target parent",
+            )
+
         new_ancestors = list(new_parent.get("ancestors") or []) + [new_parent_id]
 
         old_prefix = list(dept.get("ancestors") or []) + [dept_id]
@@ -188,6 +227,10 @@ async def update_department(db: AsyncIOMotorDatabase, user: dict, dept_id_str: s
     if data.employee_count is not None:
         updates["employee_count"] = data.employee_count
     if data.status is not None:
+        # Archiving via PATCH must honour the same integrity guards as DELETE,
+        # so it cannot bypass the "no active children / no assigned users" checks.
+        if data.status == "archived" and dept.get("status") != "archived":
+            await _assert_archivable(db, org_id, dept_id)
         updates["status"] = data.status
 
     # --- Head change ---
@@ -215,12 +258,8 @@ async def assign_head(db: AsyncIOMotorDatabase, user: dict, dept_id_str: str, ta
 
     await _load_dept(db, org_id, dept_id)
 
-    # Permission: admin or dept_head of an ancestor
-    if not has_role(user, "master_admin", "org_admin"):
-        dept_doc = await _load_dept(db, org_id, dept_id)
-        user_dept = user.get("department_id")
-        if not user_dept or (user_dept != dept_id and user_dept not in (dept_doc.get("ancestors") or [])):
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Insufficient permissions")
+    # Permission: admin, or dept_head within this subtree
+    await require_manage_permission(user, dept_id)
 
     target = await _ensure_user_in_org(db, org_id, target_uid)
 
@@ -244,9 +283,8 @@ async def add_member(db: AsyncIOMotorDatabase, user: dict, dept_id_str: str, tar
 
     await _load_dept(db, org_id, dept_id)
 
-    # Permission: admin or self-service (user's dept is this dept or an ancestor)
-    if not has_role(user, "master_admin", "org_admin"):
-        await check_department_permission(user, dept_id)
+    # Permission: admin, or dept_head within this subtree (self-service)
+    await require_manage_permission(user, dept_id)
 
     target = await _ensure_user_in_org(db, org_id, target_uid)
 
@@ -378,17 +416,29 @@ async def get_rollup(
 ) -> dict:
     """Compute live rollup for a department subtree."""
     dept_id = _oid(dept_id_str)
-    await _load_dept(db, org_id, dept_id)
+    dept = await _load_dept(db, org_id, dept_id)
     subtree_ids = await get_subtree_ids(db, org_id, dept_id)
     pf = _build_period_filter(year, month, from_year, from_month, to_year, to_month)
 
     # Aggregate totals
     carbon = await _aggregate_carbon(db, subtree_ids, pf)
 
-    # ESG scores — latest scores for subtree nodes
+    # Period ceiling for "latest score <= requested period" (spec rule).
+    if to_year is not None:
+        ceil_y, ceil_m = to_year, (to_month or 12)
+    elif month:
+        ceil_y, ceil_m = year, month
+    else:
+        ceil_y, ceil_m = year, 12
+    score_ceiling = {"$or": [
+        {"period.year": {"$lt": ceil_y}},
+        {"period.year": ceil_y, "period.month": {"$lte": ceil_m}},
+    ]}
+
+    # ESG scores — latest score at or before the requested period, per subtree node
     esg = {"e": 0.0, "s": 0.0, "g": 0.0, "total": 0.0}
     score_pipeline = [
-        {"$match": {"org_id": org_id, "department_id": {"$in": subtree_ids}}},
+        {"$match": {"org_id": org_id, "department_id": {"$in": subtree_ids}, **score_ceiling}},
         {"$sort": {"period.year": -1, "period.month": -1}},
         {"$group": {
             "_id": "$department_id",
@@ -424,6 +474,22 @@ async def get_rollup(
     ]
     xp_results = await db.xp_ledger.aggregate(xp_pipeline).to_list(1)
     xp_total = xp_results[0]["total"] if xp_results else 0
+
+    # Data attached directly to this node (not to any child), so
+    # direct + Σ by_child == subtree total. Makes the rollup fully explainable.
+    direct_carbon = await _aggregate_carbon(db, [dept_id], pf)
+    direct_xp_res = await db.xp_ledger.aggregate([
+        {"$match": {"org_id": org_id, "department_id": dept_id}},
+        {"$group": {"_id": None, "total": {"$sum": "$xp_delta"}}},
+    ]).to_list(1)
+    direct = {
+        "department_id": dept_id,
+        "name": f"{dept['name']} (direct)",
+        "total_carbon_kg": direct_carbon["total_carbon_kg"],
+        "emissions_kg": direct_carbon["emissions_kg"],
+        "offsets_kg": direct_carbon["offsets_kg"],
+        "xp_total": direct_xp_res[0]["total"] if direct_xp_res else 0,
+    }
 
     # by_child breakdown
     direct_children = await db.departments.find(
@@ -466,6 +532,7 @@ async def get_rollup(
         "esg": esg,
         "xp_total": xp_total,
         "open_compliance_issues": ci_count,
+        "direct": direct,
         "by_child": by_child,
     }
 
@@ -482,17 +549,7 @@ async def archive_department(db: AsyncIOMotorDatabase, user: dict, dept_id_str: 
     if not has_role(user, "master_admin", "org_admin"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Only admins can archive departments")
 
-    # Check no active children
-    active_child = await db.departments.find_one({
-        "org_id": org_id, "parent_id": dept_id, "status": "active",
-    })
-    if active_child:
-        raise HTTPException(status.HTTP_409_CONFLICT, "Archive or reassign child departments first")
-
-    # Check no assigned users
-    assigned = await db.users.find_one({"org_id": org_id, "department_id": dept_id})
-    if assigned:
-        raise HTTPException(status.HTTP_409_CONFLICT, "Reassign users from this department first")
+    await _assert_archivable(db, org_id, dept_id)
 
     await db.departments.update_one(
         {"_id": dept_id}, {"$set": {"status": "archived", "updated_at": utcnow()}},

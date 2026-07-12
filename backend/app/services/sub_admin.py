@@ -71,15 +71,31 @@ async def check_reference_scope(
         )
 
 
-async def grant_scope(db: AsyncIOMotorDatabase, user_id_str: str, scope_data) -> dict:
-    """Grant a region or sector sub-admin scope to a user."""
+async def grant_scope(db: AsyncIOMotorDatabase, org_id: ObjectId, user_id_str: str, scope_data) -> dict:
+    """Grant a region or sector sub-admin scope to a user in the caller's org."""
     user_id = ObjectId(user_id_str)
-    user = await db.users.find_one({"_id": user_id})
+    # Org-scoped lookup: a master_admin may only manage users in their own org.
+    user = await db.users.find_one({"_id": user_id, "org_id": org_id})
     if user is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
     kind = scope_data.kind
     values = scope_data.values
+
+    # Region values are ISO country codes — normalise to upper-case so scope
+    # checks match the upper-cased `country` stored on reference rows, and
+    # reject anything that isn't a 2-letter code.
+    if kind == "region":
+        normalised = []
+        for v in values:
+            code = v.strip().upper()
+            if len(code) != 2 or not code.isalpha():
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    f"Region scope values must be 2-letter ISO country codes; got '{v}'",
+                )
+            normalised.append(code)
+        values = normalised
 
     # Check duplicates
     existing_roles = user.get("roles", [])
@@ -115,13 +131,17 @@ async def grant_scope(db: AsyncIOMotorDatabase, user_id_str: str, scope_data) ->
 
 
 async def revoke_scope(
-    db: AsyncIOMotorDatabase, user_id_str: str, kind: Optional[str] = None, values: Optional[list[str]] = None
+    db: AsyncIOMotorDatabase, org_id: ObjectId, user_id_str: str, kind: Optional[str] = None, values: Optional[list[str]] = None
 ) -> dict:
-    """Revoke a sub-admin scope from a user."""
+    """Revoke a sub-admin scope from a user in the caller's org."""
     user_id = ObjectId(user_id_str)
-    user = await db.users.find_one({"_id": user_id})
+    user = await db.users.find_one({"_id": user_id, "org_id": org_id})
     if user is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+    # Normalise region values so revocation matches how the scope was stored.
+    if kind == "region" and values is not None:
+        values = [v.strip().upper() for v in values]
 
     roles = user.get("roles", [])
 

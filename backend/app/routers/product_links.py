@@ -20,19 +20,7 @@ from app.services import product_link as product_link_service
 router = APIRouter(tags=["product-links"])
 
 
-def _serialize(doc):
-    """Recursively convert ObjectId and datetime objects for clean serialization."""
-    if doc is None:
-        return None
-    if isinstance(doc, list):
-        return [_serialize(d) for d in doc]
-    if isinstance(doc, dict):
-        return {k: _serialize(v) for k, v in doc.items()}
-    if isinstance(doc, ObjectId):
-        return str(doc)
-    if isinstance(doc, datetime):
-        return doc.isoformat()
-    return doc
+from app.utils import serialize_doc as _serialize
 
 
 @router.post("/product-links", response_model=ProductLinkDocument, status_code=status.HTTP_201_CREATED)

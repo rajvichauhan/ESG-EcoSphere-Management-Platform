@@ -56,8 +56,13 @@ PyObjectId = Annotated[ObjectId, _ObjectIdAnnotation]
 # ---------------------------------------------------------------------------
 
 class MoneyField(BaseModel):
-    """ISO-4217 monetary amount: ``{ amount, currency }``."""
-    amount: float
+    """ISO-4217 monetary amount: ``{ amount, currency }``.
+
+    ``amount`` is constrained non-negative — every monetary figure in the
+    platform (prices, bills, revenue) is a magnitude, and negative revenue
+    would corrupt revenue-share overhead allocation.
+    """
+    amount: float = Field(..., ge=0.0)
     currency: str = Field(..., min_length=3, max_length=3, description="ISO 4217 currency code")
 
 

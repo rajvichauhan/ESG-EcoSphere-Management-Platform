@@ -32,12 +32,9 @@ class DepartmentUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     code: Optional[str] = Field(None, min_length=1, max_length=50)
     employee_count: Optional[int] = Field(None, ge=0)
-    status: Optional[str] = None
+    status: Optional[str] = Field(None, pattern="^(active|archived)$")
     parent_id: Optional[PyObjectId] = None
     head_user_id: Optional[PyObjectId] = None
-
-    # Sentinel so callers can distinguish "field not sent" from "set to null"
-    _move_requested: bool = False
 
 
 class AssignHeadRequest(BaseModel):
@@ -109,6 +106,9 @@ class RollupResponse(BaseModel):
     esg: ESGScores = Field(default_factory=ESGScores)
     xp_total: int = 0
     open_compliance_issues: int = 0
+    # Data attached directly to this department (not to any sub-department), so
+    # `direct` + every `by_child` sums to the subtree total. Explains the rollup.
+    direct: Optional[RollupChildEntry] = None
     by_child: list[RollupChildEntry] = Field(default_factory=list)
 
     model_config = {"arbitrary_types_allowed": True}

@@ -175,6 +175,10 @@ async def check_department_permission(
     """Raise 403 unless the user is master/org_admin or their department is
     the target or an ancestor of the target (self-service subtree rule).
 
+    Position-only check — used for *read* access (rollups, subtree listing)
+    where any user inside the subtree may view. For *write* access that the
+    spec restricts to admins/dept-heads, use ``require_manage_permission``.
+
     When ``allow_self`` is True, the user's own department qualifies.
     """
     if has_role(user, "master_admin", "org_admin"):
@@ -202,4 +206,59 @@ async def check_department_permission(
     raise HTTPException(
         status.HTTP_403_FORBIDDEN,
         "You may only manage your own department subtree",
+    )
+
+
+async def require_manage_permission(
+    user: dict,
+    target_dept_id: ObjectId | None,
+) -> None:
+    """Authorize a *write* against a department-scoped (or org-level) resource.
+
+    Rules (per spec — every Phase 12–14 write endpoint is "org_admin, or
+    dept_head of the resource's department/ancestor"):
+
+    - ``master_admin`` / ``org_admin`` may act anywhere in their org.
+    - When ``target_dept_id`` is None (an org-level resource), only admins
+      qualify — a dept_head has no org-wide authority.
+    - Otherwise the caller must hold ``dept_head`` AND their own department
+      must be the target or one of its ancestors (own-subtree rule).
+    - Everyone else (plain employees, etc.) is denied.
+    """
+    if has_role(user, "master_admin", "org_admin"):
+        return
+
+    if target_dept_id is None:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Organization-level changes require an org_admin or master_admin role",
+        )
+
+    if not has_role(user, "dept_head"):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Requires an org_admin, master_admin, or dept_head role",
+        )
+
+    user_dept = user.get("department_id")
+    if not user_dept:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "No department assignment")
+
+    if user_dept == target_dept_id:
+        return
+
+    db = get_db()
+    target = await db.departments.find_one(
+        {"_id": target_dept_id, "org_id": user["org_id"]},
+        {"ancestors": 1},
+    )
+    if target is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Department not found")
+
+    if user_dept in (target.get("ancestors") or []):
+        return
+
+    raise HTTPException(
+        status.HTTP_403_FORBIDDEN,
+        "You may only manage resources within your own department subtree",
     )

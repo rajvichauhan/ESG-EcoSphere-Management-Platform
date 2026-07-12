@@ -23,7 +23,7 @@ class FacilityUpdate(BaseModel):
     city: Optional[str] = Field(None, min_length=1)
     department_id: Optional[PyObjectId] = None
     employee_count: Optional[int] = Field(None, ge=0)
-    status: Optional[str] = None
+    status: Optional[str] = Field(None, pattern="^(active|closed)$")
 
 
 class FacilityDocument(OrgScopedDocument):
@@ -33,6 +33,12 @@ class FacilityDocument(OrgScopedDocument):
     department_id: Optional[PyObjectId] = None
     employee_count: int
     status: str = "active"
+
+
+class FacilityCreateResponse(FacilityDocument):
+    """Facility document plus a transient ``warning`` surfaced at creation time
+    (e.g. no city profile exists yet for the facility's city)."""
+    warning: Optional[str] = None
 
 
 class ReadingInputs(BaseModel):

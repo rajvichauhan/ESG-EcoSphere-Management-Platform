@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
 from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 
 from app.models.common import utcnow
 
@@ -23,7 +25,7 @@ async def list_carbon_references(
     if category:
         query["product_category"] = category
     if product_name:
-        query["product_name"] = {"$regex": f"^{product_name}$", "$options": "i"}
+        query["product_name"] = {"$regex": f"^{re.escape(product_name)}$", "$options": "i"}
     if year:
         query["year"] = year
 
@@ -59,7 +61,13 @@ async def create_carbon_reference(db: AsyncIOMotorDatabase, user: dict, data) ->
         "created_at": now,
         "updated_at": now,
     }
-    res = await db.carbon_reference.insert_one(doc)
+    try:
+        res = await db.carbon_reference.insert_one(doc)
+    except DuplicateKeyError:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Carbon reference row with these parameters already exists",
+        )
     doc["_id"] = res.inserted_id
     return doc
 

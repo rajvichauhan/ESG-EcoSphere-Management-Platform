@@ -7,7 +7,7 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.auth import check_department_permission
+from app.auth import require_manage_permission
 from app.models.common import utcnow
 from app.services.carbon_reference import lookup_carbon_reference
 
@@ -36,8 +36,7 @@ async def create_product(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
     org_id = user["org_id"]
     dept_id = ObjectId(str(data.department_id)) if data.department_id else None
 
-    if dept_id:
-        await check_department_permission(user, dept_id)
+    await require_manage_permission(user, dept_id)
 
     now = utcnow()
     doc = {
@@ -65,8 +64,7 @@ async def update_product(db: AsyncIOMotorDatabase, user: dict, product_id_str: s
     product_id = ObjectId(product_id_str)
     prod = await get_product(db, org_id, product_id_str)
 
-    if prod.get("department_id"):
-        await check_department_permission(user, prod["department_id"])
+    await require_manage_permission(user, prod.get("department_id"))
 
     updates = {}
     if data.name is not None:
@@ -86,7 +84,7 @@ async def update_product(db: AsyncIOMotorDatabase, user: dict, product_id_str: s
 
     if data.department_id is not None:
         new_dept = ObjectId(str(data.department_id))
-        await check_department_permission(user, new_dept)
+        await require_manage_permission(user, new_dept)
         updates["department_id"] = new_dept
 
     if updates:
@@ -101,8 +99,7 @@ async def discontinue_product(db: AsyncIOMotorDatabase, user: dict, product_id_s
     product_id = ObjectId(product_id_str)
     prod = await get_product(db, org_id, product_id_str)
 
-    if prod.get("department_id"):
-        await check_department_permission(user, prod["department_id"])
+    await require_manage_permission(user, prod.get("department_id"))
 
     await db.products.update_one(
         {"_id": product_id},
@@ -117,8 +114,7 @@ async def calculate_carbon(db: AsyncIOMotorDatabase, user: dict, product_id_str:
     product_id = ObjectId(product_id_str)
     prod = await get_product(db, org_id, product_id_str)
 
-    if prod.get("department_id"):
-        await check_department_permission(user, prod["department_id"])
+    await require_manage_permission(user, prod.get("department_id"))
 
     target_year = year if year is not None else utcnow().year
 
@@ -170,8 +166,7 @@ async def record_production(db: AsyncIOMotorDatabase, user: dict, product_id_str
     product_id = ObjectId(product_id_str)
     prod = await get_product(db, org_id, product_id_str)
 
-    if prod.get("department_id"):
-        await check_department_permission(user, prod["department_id"])
+    await require_manage_permission(user, prod.get("department_id"))
 
     carbon = prod.get("carbon")
     if carbon is None:
@@ -192,18 +187,26 @@ async def record_production(db: AsyncIOMotorDatabase, user: dict, product_id_str
         source_type = "linked_partner"
         source_ref = {"collection": "product_links", "id": ObjectId(str(carbon["source_link_id"]))}
 
-    # Delete existing ledger transaction for this product+period (idempotence)
+    # Delete any existing ledger row for THIS product + period, keyed on the
+    # stable product_id marker (not source_ref). This is critical: after a
+    # product adopts a partner link its source_ref flips from products→product_links,
+    # so keying the delete on source_ref would leave the old "product" row behind
+    # and double-count. The legacy source_ref clause cleans rows written before
+    # the product_id marker existed.
     await db.carbon_transactions.delete_many({
         "org_id": org_id,
-        "source_ref.collection": source_ref["collection"],
-        "source_ref.id": source_ref["id"],
         "period.year": period.year,
         "period.month": period.month,
+        "$or": [
+            {"product_id": product_id},
+            {"source_ref.collection": "products", "source_ref.id": product_id},
+        ],
     })
 
     tx = {
         "org_id": org_id,
         "department_id": prod.get("department_id"),
+        "product_id": product_id,  # stable idempotency key across source_type changes
         "period": period.model_dump(),
         "amount_kg": total_carbon_kg,
         "source_type": source_type,

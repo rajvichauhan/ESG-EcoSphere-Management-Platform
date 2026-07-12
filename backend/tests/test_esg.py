@@ -391,3 +391,184 @@ async def test_phase_15_sub_admins(test_data):
             "working_days_per_month": 20,
         }, headers=headers_sub)
         assert res_cp_fail.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Regression tests — production-hardening fixes (audit of Phases 11-15)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_role_enforcement_employee_denied(test_data):
+    """A plain employee must not be able to create org-level resources or run
+    org-wide allocations (C1 — missing role enforcement)."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        emp = test_data["headers"]["emp"]
+
+        r1 = await ac.post("/api/facilities", json={
+            "name": "Rogue HQ", "country": "IN", "city": "Mumbai", "employee_count": 5,
+        }, headers=emp)
+        assert r1.status_code == 403
+
+        r2 = await ac.post("/api/products", json={
+            "name": "Rogue", "category": "widgets", "production_country": "IN",
+            "production_city": "Pune", "unit_price": {"amount": 1.0, "currency": "USD"},
+        }, headers=emp)
+        assert r2.status_code == 403
+
+        r3 = await ac.post("/api/overhead-allocations/run", json={
+            "period": {"year": 2026, "month": 6},
+        }, headers=emp)
+        assert r3.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_department_archive_guard_and_move_collision(test_data):
+    """PATCH status→archived cannot bypass the child/user guards (P11-1), and a
+    move that collides with an existing sibling name returns 409 (P11-2)."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        h = test_data["headers"]["admin"]
+
+        root = (await ac.post("/api/departments", json={"name": "Root", "code": "R"}, headers=h)).json()["_id"]
+        a = (await ac.post("/api/departments", json={"name": "A", "code": "A", "parent_id": root}, headers=h)).json()["_id"]
+        b = (await ac.post("/api/departments", json={"name": "B", "code": "B", "parent_id": root}, headers=h)).json()["_id"]
+
+        # Archiving Root via PATCH must fail — it still has active children.
+        res_arch = await ac.patch(f"/api/departments/{root}", json={"status": "archived"}, headers=h)
+        assert res_arch.status_code == 409
+
+        # Two departments named "Team", one under A and one under B.
+        await ac.post("/api/departments", json={"name": "Team", "code": "TA", "parent_id": a}, headers=h)
+        team_b = (await ac.post("/api/departments", json={"name": "Team", "code": "TB", "parent_id": b}, headers=h)).json()["_id"]
+
+        # Moving B's "Team" under A collides with A's existing "Team".
+        res_move = await ac.patch(f"/api/departments/{team_b}", json={"parent_id": a}, headers=h)
+        assert res_move.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_record_production_idempotent_across_link_adoption(test_data):
+    """After a product adopts a partner link (source_type flips product→linked_partner),
+    re-recording the same period must replace, not duplicate, the ledger row (P13-1)."""
+    db = get_db()
+    org_id = test_data["org_id"]
+    now = utcnow()
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        h = test_data["headers"]["admin"]
+
+        # Reference row + requester product with its own carbon.
+        await ac.post("/api/carbon-reference", json={
+            "country": "IN", "city": "Pune", "product_category": "widgets",
+            "product_name": "WP", "year": 2026, "carbon_value": 2.0, "unit": "per_unit",
+        }, headers=test_data["headers"]["master"])
+        prod_id = (await ac.post("/api/products", json={
+            "name": "WP", "category": "widgets", "production_country": "IN",
+            "production_city": "Pune", "unit_price": {"amount": 3.0, "currency": "USD"},
+        }, headers=h)).json()["_id"]
+        await ac.post(f"/api/products/{prod_id}/calculate-carbon", json={"year": 2026}, headers=h)
+
+        # First production record (source_type "product").
+        await ac.post(f"/api/products/{prod_id}/record-production", json={
+            "period": {"year": 2026, "month": 6}, "quantity_units": 100,
+        }, headers=h)
+
+        # Partner org + partner product with calculated carbon (inserted directly).
+        p_org = ObjectId()
+        await db.organizations.insert_one({
+            "_id": p_org, "name": "Partner", "type": "corporate", "status": "active",
+            "settings": {}, "created_at": now, "updated_at": now,
+        })
+        p_admin = ObjectId()
+        await db.users.insert_one({
+            "_id": p_admin, "org_id": p_org, "email": "padmin@test.com",
+            "password_hash": hash_password("x"), "full_name": "P Admin",
+            "roles": [{"role": "org_admin"}], "status": "active",
+            "created_at": now, "updated_at": now,
+        })
+        p_prod = ObjectId()
+        await db.products.insert_one({
+            "_id": p_prod, "org_id": p_org, "department_id": None, "name": "PP",
+            "category": "widgets", "production_country": "IN", "production_city": "Pune",
+            "unit_price": {"amount": 9.0, "currency": "USD"},
+            "carbon": {"per_unit_kg": 5.0, "reference_id": None, "match_tier": 1,
+                       "is_approximation": False, "unit": "per_unit", "calculated_at": now,
+                       "source_link_id": None},
+            "status": "active", "created_at": now, "updated_at": now,
+        })
+        p_headers = {"Authorization": f"Bearer {create_access_token(str(p_admin), str(p_org))}"}
+
+        # Create link, partner confirms, requester adopts partner's per-unit value.
+        link_id = (await ac.post("/api/product-links", json={
+            "requester_product_id": prod_id, "partner_org_id": str(p_org),
+            "partner_product_id": str(p_prod), "link_type": "carbon_credit",
+        }, headers=h)).json()["_id"]
+        confirm = await ac.patch(f"/api/product-links/{link_id}", json={"action": "confirm"}, headers=p_headers)
+        assert confirm.status_code == 200
+        await ac.post(f"/api/products/{prod_id}/adopt-linked-value", json={"link_id": link_id}, headers=h)
+
+        # Re-record the SAME period — now as a linked_partner row.
+        await ac.post(f"/api/products/{prod_id}/record-production", json={
+            "period": {"year": 2026, "month": 6}, "quantity_units": 100,
+        }, headers=h)
+
+        # Exactly one ledger row must exist for this product+period (no double count).
+        rows = await db.carbon_transactions.find({
+            "product_id": ObjectId(prod_id), "period.year": 2026, "period.month": 6,
+        }).to_list(10)
+        assert len(rows) == 1
+        assert rows[0]["amount_kg"] == pytest.approx(500.0)
+        assert rows[0]["source_type"] == "linked_partner"
+
+
+@pytest.mark.asyncio
+async def test_product_link_same_org_rejected(test_data):
+    """A link whose partner org is the requester's own org is rejected (P14-3)."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        h = test_data["headers"]["admin"]
+        p1 = (await ac.post("/api/products", json={
+            "name": "P1", "category": "c", "production_country": "IN",
+            "production_city": "Pune", "unit_price": {"amount": 1.0, "currency": "USD"},
+        }, headers=h)).json()["_id"]
+        p2 = (await ac.post("/api/products", json={
+            "name": "P2", "category": "c", "production_country": "IN",
+            "production_city": "Pune", "unit_price": {"amount": 1.0, "currency": "USD"},
+        }, headers=h)).json()["_id"]
+
+        res = await ac.post("/api/product-links", json={
+            "requester_product_id": p1, "partner_org_id": str(test_data["org_id"]),
+            "partner_product_id": p2, "link_type": "component",
+        }, headers=h)
+        assert res.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_sub_admin_grant_is_org_scoped(test_data):
+    """A master_admin cannot grant sub-admin scope to a user in another org (P15-1)."""
+    db = get_db()
+    now = utcnow()
+    other_org = ObjectId()
+    other_user = ObjectId()
+    await db.organizations.insert_one({
+        "_id": other_org, "name": "Other", "type": "corporate", "status": "active",
+        "settings": {}, "created_at": now, "updated_at": now,
+    })
+    await db.users.insert_one({
+        "_id": other_user, "org_id": other_org, "email": "other@test.com",
+        "password_hash": hash_password("x"), "full_name": "Other", "roles": [{"role": "employee"}],
+        "status": "active", "created_at": now, "updated_at": now,
+    })
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res = await ac.post("/api/admin/sub-admins", json={
+            "user_id": str(other_user), "scope": {"kind": "region", "values": ["US"]},
+        }, headers=test_data["headers"]["master"])
+        assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_facility_create_warning_surfaced(test_data):
+    """Creating a facility for a city with no profile returns the warning (P12-1)."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res = await ac.post("/api/facilities", json={
+            "name": "No-Profile Office", "country": "BR", "city": "Sao Paulo", "employee_count": 3,
+        }, headers=test_data["headers"]["admin"])
+        assert res.status_code == 201
+        assert res.json().get("warning")

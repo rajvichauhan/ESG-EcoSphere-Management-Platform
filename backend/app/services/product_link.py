@@ -7,9 +7,19 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.auth import check_department_permission
+from app.auth import has_role, require_manage_permission
 from app.models.common import utcnow
 from app.services.product import get_product
+
+
+def _require_privileged(user: dict) -> None:
+    """Cross-company links aren't tied to a single department, so acting on one
+    requires an elevated role (admin or dept_head) rather than a subtree check."""
+    if not has_role(user, "master_admin", "org_admin", "dept_head"):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Requires an org_admin, master_admin, or dept_head role",
+        )
 
 
 async def create_link(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
@@ -18,10 +28,17 @@ async def create_link(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
     partner_org_id = ObjectId(str(data.partner_org_id))
     partner_prod_id = ObjectId(str(data.partner_product_id))
 
+    # A link must be cross-company; self-linking would let one org create and
+    # then "confirm" its own link, defeating the confirmation step.
+    if partner_org_id == org_id:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "A product link must reference a different organisation",
+        )
+
     # Validate requester product exists in caller's org
     req_prod = await get_product(db, org_id, str(req_prod_id))
-    if req_prod.get("department_id"):
-        await check_department_permission(user, req_prod["department_id"])
+    await require_manage_permission(user, req_prod.get("department_id"))
 
     # Validate partner product exists in partner org
     partner_prod = await db.products.find_one({
@@ -95,6 +112,10 @@ async def respond_to_link(
     link = await db.product_links.find_one({"_id": link_id})
     if not link:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Product link request not found")
+
+    # Responding to a cross-company link requires an elevated role, not merely
+    # membership in the acting organisation.
+    _require_privileged(user)
 
     now = utcnow()
 
@@ -173,8 +194,7 @@ async def adopt_linked_value(
     link_id = ObjectId(link_id_str)
 
     prod = await get_product(db, org_id, product_id_str)
-    if prod.get("department_id"):
-        await check_department_permission(user, prod["department_id"])
+    await require_manage_permission(user, prod.get("department_id"))
 
     link = await db.product_links.find_one({"_id": link_id})
     if not link:

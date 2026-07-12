@@ -108,4 +108,3 @@ class ProductLinkDocument(BaseModel):
 
 class AdoptLinkedValueRequest(BaseModel):
     link_id: PyObjectId
-print("Loaded ProductLink models")

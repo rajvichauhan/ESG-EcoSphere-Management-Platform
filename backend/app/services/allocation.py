@@ -7,7 +7,9 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.auth import check_department_permission, get_subtree_ids
+from pymongo.errors import DuplicateKeyError
+
+from app.auth import require_manage_permission, get_subtree_ids
 from app.models.common import utcnow
 from app.services.product import get_product
 
@@ -42,8 +44,7 @@ async def record_sale(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
     prod = await get_product(db, org_id, str(product_id))
     dept_id = prod.get("department_id")
 
-    if dept_id:
-        await check_department_permission(user, dept_id)
+    await require_manage_permission(user, dept_id)
 
     period = data.period
     # Enforce unique period+product constraints
@@ -76,7 +77,14 @@ async def record_sale(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
         "updated_at": now,
     }
 
-    res = await db.product_sales.insert_one(doc)
+    try:
+        res = await db.product_sales.insert_one(doc)
+    except DuplicateKeyError:
+        # Concurrent insert for the same product+period
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Sales entry for this product and period already exists; use PATCH to modify",
+        )
     doc["_id"] = res.inserted_id
     return doc
 
@@ -90,8 +98,7 @@ async def update_sale(db: AsyncIOMotorDatabase, user: dict, sale_id_str: str, da
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Sales record not found")
 
     prod = await get_product(db, org_id, str(sale["product_id"]))
-    if prod.get("department_id"):
-        await check_department_permission(user, prod["department_id"])
+    await require_manage_permission(user, prod.get("department_id"))
 
     updates = {}
     units = sale["units_sold"]
@@ -160,10 +167,11 @@ async def run_allocation(db: AsyncIOMotorDatabase, user: dict, data) -> dict:
     period = data.period
 
     if dept_id:
-        await check_department_permission(user, dept_id)
+        await require_manage_permission(user, dept_id)
         scope_ids = await get_subtree_ids(org_id, dept_id)
     else:
-        # Full org scope
+        # Full org scope — org-level action, admins only
+        await require_manage_permission(user, None)
         depts = await db.departments.find({"org_id": org_id}).to_list(5000)
         scope_ids = [d["_id"] for d in depts]
 
