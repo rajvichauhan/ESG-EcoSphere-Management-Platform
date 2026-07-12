@@ -75,7 +75,7 @@ export const CsrActivitiesPage: React.FC = () => {
   return (
     <div className="csr-activities-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
-      <div className="glass-panel" style={{ padding: '24px 28px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Corporate Social Responsibility (CSR) & Community Impact</h2>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
@@ -111,8 +111,8 @@ export const CsrActivitiesPage: React.FC = () => {
                     ${(act.spent_usd || 0).toLocaleString()} / ${(act.budget_usd || 0).toLocaleString()} ({spendPct}%)
                   </span>
                 </div>
-                <div style={{ width: '100%', height: '8px', background: 'var(--bg-glass)', borderRadius: '4px', overflow: 'hidden', marginBottom: '16px' }}>
-                  <div style={{ width: `${Math.min(100, spendPct)}%`, height: '100%', background: 'hsl(215, 70%, 50%)' }} />
+                <div style={{ width: '100%', height: '6px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius)', overflow: 'hidden', marginBottom: '16px' }}>
+                  <div style={{ width: `${Math.min(100, spendPct)}%`, height: '100%', background: 'var(--accent-blue)' }} />
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-glass)', paddingTop: '12px' }}>
@@ -129,7 +129,7 @@ export const CsrActivitiesPage: React.FC = () => {
 
                   {hasRole('org_admin', 'master_admin') && act.status === 'pending' && (
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => handleReview(act._id, 'approved')} className="btn btn-success" style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <button onClick={() => handleReview(act._id, 'approved')} className="btn btn-primary" style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <CheckCircle size={14} /> Approve
                       </button>
                       <button onClick={() => handleReview(act._id, 'rejected')} className="btn btn-danger" style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -151,7 +151,7 @@ export const CsrActivitiesPage: React.FC = () => {
           columns={[
             { key: 'user_id', header: 'Employee / Volunteer ID', render: (p) => <strong style={{ color: 'var(--text-main)' }}>{p.user_id}</strong> },
             { key: 'activity_id', header: 'Initiative ID', render: (p) => <code style={{ color: 'var(--color-primary)' }}>{p.activity_id}</code> },
-            { key: 'hours_contributed', header: 'Hours Contributed', render: (p) => <span className="badge badge-success">{p.hours_contributed} hrs</span> },
+            { key: 'hours_contributed', header: 'Hours Contributed', render: (p) => <span className="badge">{p.hours_contributed} hrs</span> },
             { key: 'status', header: 'Status', render: (p) => <StatusBadge value={p.status || 'confirmed'} /> },
             { key: 'joined_at', header: 'Date Logged', render: (p) => new Date(p.joined_at || Date.now()).toLocaleDateString() },
           ]}
@@ -164,13 +164,13 @@ export const CsrActivitiesPage: React.FC = () => {
         <form onSubmit={handleCreateActivity}>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>INITIATIVE TITLE</label>
-            <input type="text" required className="input" value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
+            <input type="text" required className="input" value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>CATEGORY</label>
-              <select className="input" value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)', fontWeight: 600 }}>
+              <select className="input" value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', fontWeight: 600 }}>
                 <option value="Environmental Restoration">Environmental Restoration</option>
                 <option value="Education & STEM">Education & STEM</option>
                 <option value="Healthcare & Wellness">Healthcare & Wellness</option>
@@ -179,13 +179,13 @@ export const CsrActivitiesPage: React.FC = () => {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>TARGET HOURS</label>
-              <input type="number" required min="1" className="input" value={hours} onChange={(e) => setHours(parseInt(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
+              <input type="number" required min="1" className="input" value={hours} onChange={(e) => setHours(parseInt(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
             </div>
           </div>
 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>TOTAL BUDGET (USD)</label>
-            <input type="number" required min="0" className="input" value={budget} onChange={(e) => setBudget(parseFloat(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
+            <input type="number" required min="0" className="input" value={budget} onChange={(e) => setBudget(parseFloat(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

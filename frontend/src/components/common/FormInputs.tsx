@@ -26,24 +26,23 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 }) => {
   return (
     <Modal open={open} title={title} onClose={onClose} maxWidth="440px">
-      <div style={{ textAlign: 'center', padding: '16px 0' }}>
+      <div style={{ textAlign: 'center', padding: '8px 0' }}>
         <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
           <div
             style={{
-              width: 54,
-              height: 54,
-              borderRadius: '50%',
-              background: destructive ? 'hsla(0, 80%, 55%, 0.12)' : 'hsla(38, 92%, 50%, 0.12)',
-              color: destructive ? 'hsl(0, 80%, 55%)' : 'hsl(38, 92%, 50%)',
+              width: 48,
+              height: 48,
+              border: `1px solid ${destructive ? 'var(--accent-red)' : 'var(--accent-blue)'}`,
+              color: destructive ? 'var(--accent-red)' : 'var(--accent-blue)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <AlertTriangle size={28} />
+            <AlertTriangle size={24} />
           </div>
         </div>
-        <p style={{ fontSize: '14px', color: 'var(--text-main)', lineHeight: '1.6', marginBottom: '24px' }}>{message}</p>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: '1.6', marginBottom: '24px' }}>{message}</p>
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             {cancelLabel}
@@ -75,12 +74,12 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export const PeriodFilter: React.FC<PeriodFilterProps> = ({ value, onChange, showMonth = true }) => {
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--bg-glass)', padding: '4px 10px', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)' }}>
       <select
         className="input"
         value={value.year}
         onChange={(e) => onChange({ ...value, year: parseInt(e.target.value) })}
-        style={{ padding: '6px 10px', fontSize: '13px', border: 'none', background: 'transparent', fontWeight: 600, cursor: 'pointer' }}
+        style={{ padding: '4px 8px', fontSize: '0.8rem', border: 'none', background: 'transparent', fontWeight: 700, cursor: 'pointer', width: 'auto' }}
       >
         {[2024, 2025, 2026, 2027].map((y) => (
           <option key={y} value={y}>
@@ -90,18 +89,21 @@ export const PeriodFilter: React.FC<PeriodFilterProps> = ({ value, onChange, sho
       </select>
 
       {showMonth && (
-        <select
-          className="input"
-          value={value.month || 6}
-          onChange={(e) => onChange({ ...value, month: parseInt(e.target.value) })}
-          style={{ padding: '6px 10px', fontSize: '13px', border: 'none', background: 'transparent', fontWeight: 600, cursor: 'pointer' }}
-        >
-          {MONTHS.map((m, idx) => (
-            <option key={idx + 1} value={idx + 1}>
-              {m} ({idx + 1})
-            </option>
-          ))}
-        </select>
+        <>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
+          <select
+            className="input"
+            value={value.month || 6}
+            onChange={(e) => onChange({ ...value, month: parseInt(e.target.value) })}
+            style={{ padding: '4px 8px', fontSize: '0.8rem', border: 'none', background: 'transparent', fontWeight: 700, cursor: 'pointer', width: 'auto' }}
+          >
+            {MONTHS.map((m, idx) => (
+              <option key={idx + 1} value={idx + 1}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </>
       )}
     </div>
   );
@@ -138,8 +140,8 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({ value, onChange, label, 
 
   return (
     <div style={{ marginBottom: label ? '16px' : 0 }}>
-      {label && <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>{label}</label>}
-      <div style={{ display: 'flex', gap: '6px' }}>
+      {label && <label>{label}</label>}
+      <div style={{ display: 'flex', gap: '8px' }}>
         <input
           type="text"
           className="input"
@@ -147,14 +149,14 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({ value, onChange, label, 
           value={amtStr}
           onChange={handleAmountChange}
           placeholder="Amount (≥ 0)"
-          style={{ flexGrow: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }}
+          style={{ flexGrow: 1, padding: '0.65rem 0.85rem', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-app)' }}
         />
         <select
           className="input"
           disabled={disabled}
           value={value?.currency || 'USD'}
           onChange={(e) => onChange({ amount: value?.amount || 0, currency: e.target.value })}
-          style={{ width: '100px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)', fontWeight: 600 }}
+          style={{ width: '100px', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-app)', fontWeight: 700 }}
         >
           {['USD', 'EUR', 'GBP', 'INR', 'JPY', 'AUD', 'CAD'].map((curr) => (
             <option key={curr} value={curr}>
@@ -213,14 +215,14 @@ export function SearchBox<T extends Record<string, any>>({
   return (
     <div style={{ position: 'relative', width: '100%' }}>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-        <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 12 }} />
+        <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 12 }} />
         <input
           type="text"
           className="input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          style={{ width: '100%', padding: '10px 36px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }}
+          style={{ width: '100%', padding: '0.65rem 0.85rem 0.65rem 2.25rem', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-app)' }}
         />
         {query && (
           <button
@@ -232,7 +234,7 @@ export function SearchBox<T extends Record<string, any>>({
             }}
             style={{ position: 'absolute', right: 12, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         )}
       </div>
@@ -245,18 +247,20 @@ export function SearchBox<T extends Record<string, any>>({
             top: '100%',
             left: 0,
             right: 0,
-            marginTop: '6px',
-            maxHeight: '280px',
+            marginTop: '4px',
+            maxHeight: '260px',
             overflowY: 'auto',
             zIndex: 1100,
-            boxShadow: 'var(--shadow-lg)',
-            borderRadius: '12px',
+            boxShadow: 'none',
+            borderRadius: 'var(--radius)',
+            border: '1px solid var(--border)',
+            backgroundColor: 'var(--bg-card)',
           }}
         >
           {isSearching ? (
-            <div style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>Searching...</div>
+            <div style={{ padding: '12px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Searching...</div>
           ) : results.length === 0 ? (
-            <div style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>No matching results found</div>
+            <div style={{ padding: '12px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No matching results found</div>
           ) : (
             results.map((item) => (
               <div
@@ -267,12 +271,13 @@ export function SearchBox<T extends Record<string, any>>({
                   setIsOpen(false);
                 }}
                 style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid var(--border-glass)',
+                  padding: '10px 12px',
+                  borderBottom: '1px solid var(--border-subtle)',
                   cursor: 'pointer',
-                  transition: 'background 0.15s ease',
+                  fontSize: '0.85rem',
+                  transition: 'var(--transition-fast)',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'hsla(var(--hue-primary), 50%, 50%, 0.08)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-surface)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 {renderItem(item)}
@@ -309,20 +314,20 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({ options, value, onChan
         className="input"
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          minHeight: '42px',
-          padding: '6px 12px',
-          borderRadius: '8px',
-          border: '1px solid var(--border-glass)',
-          background: 'var(--bg-card)',
+          minHeight: '38px',
+          padding: '4px 8px',
+          borderRadius: 'var(--radius)',
+          border: '1px solid var(--border-subtle)',
+          background: 'var(--bg-app)',
           cursor: 'pointer',
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '6px',
+          gap: '4px',
           alignItems: 'center',
         }}
       >
         {value.length === 0 ? (
-          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{placeholder}</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{placeholder}</span>
         ) : (
           value.map((v) => {
             const opt = options.find((o) => o.value === v);
@@ -333,11 +338,12 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({ options, value, onChan
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  background: 'hsla(var(--hue-primary), 75%, 35%, 0.15)',
-                  color: 'var(--color-primary)',
-                  padding: '2px 8px',
-                  borderRadius: '16px',
-                  fontSize: '12px',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-main)',
+                  border: '1px solid var(--border-subtle)',
+                  padding: '2px 6px',
+                  borderRadius: 'var(--radius)',
+                  fontSize: '0.75rem',
                   fontWeight: 600,
                 }}
               >
@@ -348,7 +354,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({ options, value, onChan
                     e.stopPropagation();
                     toggleVal(v);
                   }}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', color: 'var(--text-muted)' }}
                 />
               </span>
             );
@@ -364,13 +370,15 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({ options, value, onChan
             top: '100%',
             left: 0,
             right: 0,
-            marginTop: '6px',
-            maxHeight: '220px',
+            marginTop: '4px',
+            maxHeight: '200px',
             overflowY: 'auto',
             zIndex: 1100,
-            padding: '8px 0',
-            boxShadow: 'var(--shadow-lg)',
-            borderRadius: '10px',
+            padding: '4px 0',
+            boxShadow: 'none',
+            borderRadius: 'var(--radius)',
+            border: '1px solid var(--border)',
+            backgroundColor: 'var(--bg-card)',
           }}
         >
           {options.map((opt) => {
@@ -380,20 +388,21 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({ options, value, onChan
                 key={opt.value}
                 onClick={() => toggleVal(opt.value)}
                 style={{
-                  padding: '8px 16px',
+                  padding: '8px 12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  fontSize: '13px',
+                  fontSize: '0.8rem',
                   cursor: 'pointer',
-                  background: selected ? 'hsla(var(--hue-primary), 75%, 35%, 0.08)' : 'transparent',
-                  fontWeight: selected ? 600 : 400,
+                  background: selected ? 'var(--bg-surface)' : 'transparent',
+                  color: selected ? 'var(--accent-blue)' : 'var(--text-main)',
+                  fontWeight: selected ? 700 : 400,
                 }}
-                onMouseEnter={(e) => !selected && (e.currentTarget.style.background = 'hsla(var(--hue-primary), 50%, 50%, 0.05)')}
+                onMouseEnter={(e) => !selected && (e.currentTarget.style.background = 'var(--bg-surface)')}
                 onMouseLeave={(e) => !selected && (e.currentTarget.style.background = 'transparent')}
               >
                 <span>{opt.label}</span>
-                {selected && <Check size={14} color="var(--color-primary)" />}
+                {selected && <Check size={12} color="var(--accent-blue)" />}
               </div>
             );
           })}

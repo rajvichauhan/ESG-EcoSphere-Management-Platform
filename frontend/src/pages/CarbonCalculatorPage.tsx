@@ -118,7 +118,7 @@ export const CarbonCalculatorPage: React.FC = () => {
               className="input"
               value={facilityId}
               onChange={(e) => setFacilityId(e.target.value)}
-              style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)', fontWeight: 600 }}
+              style={{ padding: '8px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', fontWeight: 600 }}
             >
               <option value="fac_mfg_pune">Pune Mfg Plant (India)</option>
               <option value="fac_mfg_frankfurt">Frankfurt Assembly Hub (Germany)</option>
@@ -133,7 +133,7 @@ export const CarbonCalculatorPage: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button onClick={() => setOpenOffsetModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <TrendingDown size={16} color="hsl(162, 75%, 40%)" /> Record Offset / Credit
+            <TrendingDown size={16} color="var(--accent-blue)" /> Record Offset / Credit
           </button>
           <button onClick={() => setOpenAddModal(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Plus size={16} /> Log Carbon Reading
@@ -153,7 +153,7 @@ export const CarbonCalculatorPage: React.FC = () => {
         <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Scope & Category Emissions Breakdown (kg CO₂ equivalent)</h3>
         <BarChart
           labels={readings.map((r) => r.type || 'Reading')}
-          series={[{ label: 'CO₂ Equivalent (kg)', data: readings.map((r) => r.co2_equivalent || r.value * 0.85), color: 'hsl(162, 75%, 40%)' }]}
+          series={[{ label: 'CO₂ Equivalent (kg)', data: readings.map((r) => r.co2_equivalent || r.value * 0.85), color: 'var(--accent-blue)' }]}
           height={220}
           unit="kg"
         />
@@ -167,7 +167,7 @@ export const CarbonCalculatorPage: React.FC = () => {
           columns={[
             { key: 'type', header: 'Activity / Fuel Type', sortable: true, render: (r) => <strong style={{ color: 'var(--text-main)' }}>{r.type}</strong> },
             { key: 'value', header: 'Consumption Value', render: (r) => `${r.value.toLocaleString()} ${r.unit}` },
-            { key: 'co2_equivalent', header: 'Calculated CO₂e', render: (r) => <span className="badge badge-warning" style={{ fontSize: '13px' }}>{(r.co2_equivalent || r.value * 0.85).toLocaleString()} kg CO₂</span> },
+            { key: 'co2_equivalent', header: 'Calculated CO₂e', render: (r) => <span className="badge badge-danger" style={{ fontSize: '13px' }}>{(r.co2_equivalent || r.value * 0.85).toLocaleString()} kg CO₂</span> },
             { key: 'period', header: 'Period', render: (r) => `${r.period ? `${r.period.month}/${r.period.year}` : 'Current'}` },
             {
               key: 'actions',
@@ -212,7 +212,7 @@ export const CarbonCalculatorPage: React.FC = () => {
                 const f = factors.find((i) => i._id === e.target.value);
                 if (f) setUnitOverride(f.unit);
               }}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)', fontWeight: 600 }}
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', fontWeight: 600 }}
             >
               {factors.map((f) => (
                 <option key={f._id} value={f._id}>

@@ -33,8 +33,8 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, fo
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'hsla(0, 0%, 0%, 0.6)',
-        backdropFilter: 'blur(6px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(2px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -43,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, fo
       }}
     >
       <div
-        className="modal-container glass-panel"
+        className="modal-container"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -54,8 +54,10 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, fo
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 24px 64px hsla(0, 0%, 0%, 0.4)',
-          borderRadius: '20px',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)',
+          backgroundColor: 'var(--bg-card)',
+          boxShadow: 'none',
           overflow: 'hidden',
         }}
       >
@@ -65,11 +67,11 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, fo
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '20px 24px',
-            borderBottom: '1px solid var(--border-glass)',
+            padding: '14px 20px',
+            borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <h3 id="modal-title" style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
+          <h3 id="modal-title" style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-main)', fontFamily: 'var(--font-display)' }}>
             {title}
           </h3>
           <button
@@ -81,15 +83,14 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, fo
               border: 'none',
               cursor: 'pointer',
               color: 'var(--text-muted)',
-              padding: '6px',
-              borderRadius: '8px',
+              padding: '4px',
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body" style={{ padding: '24px', overflowY: 'auto', flexGrow: 1 }}>
+        <div className="modal-body" style={{ padding: '20px', overflowY: 'auto', flexGrow: 1, fontSize: '0.875rem' }}>
           {children}
         </div>
 
@@ -99,10 +100,10 @@ export const Modal: React.FC<ModalProps> = ({ open, title, onClose, children, fo
             style={{
               display: 'flex',
               justifyContent: 'flex-end',
-              gap: '12px',
-              padding: '16px 24px',
-              borderTop: '1px solid var(--border-glass)',
-              background: 'hsla(var(--hue-primary), 20%, 50%, 0.03)',
+              gap: '8px',
+              padding: '12px 20px',
+              borderTop: '1px solid var(--border-subtle)',
+              background: 'var(--bg-surface)',
             }}
           >
             {footer}
@@ -143,13 +144,13 @@ export const Drawer: React.FC<DrawerProps> = ({ open, title, side = 'right', onC
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'hsla(0, 0%, 0%, 0.5)',
-        backdropFilter: 'blur(4px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(2px)',
         zIndex: 1050,
       }}
     >
       <div
-        className="drawer-content glass-panel"
+        className="drawer-content"
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'fixed',
@@ -160,10 +161,12 @@ export const Drawer: React.FC<DrawerProps> = ({ open, title, side = 'right', onC
           height: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: side === 'right' ? '-12px 0 32px hsla(0, 0%, 0%, 0.3)' : '12px 0 32px hsla(0, 0%, 0%, 0.3)',
-          borderRadius: side === 'right' ? '20px 0 0 20px' : '0 20px 20px 0',
+          borderLeft: side === 'right' ? '1px solid var(--border)' : 'none',
+          borderRight: side === 'left' ? '1px solid var(--border)' : 'none',
+          borderRadius: 0,
+          backgroundColor: 'var(--bg-card)',
+          boxShadow: 'none',
           overflow: 'hidden',
-          animation: side === 'right' ? 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)' : 'slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <div
@@ -172,11 +175,11 @@ export const Drawer: React.FC<DrawerProps> = ({ open, title, side = 'right', onC
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '20px 24px',
-            borderBottom: '1px solid var(--border-glass)',
+            padding: '14px 20px',
+            borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>{title}</h3>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>{title}</h3>
           <button
             onClick={onClose}
             aria-label="Close drawer"
@@ -185,15 +188,14 @@ export const Drawer: React.FC<DrawerProps> = ({ open, title, side = 'right', onC
               border: 'none',
               cursor: 'pointer',
               color: 'var(--text-muted)',
-              padding: '6px',
-              borderRadius: '8px',
+              padding: '4px',
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <div className="drawer-body" style={{ padding: '24px', overflowY: 'auto', flexGrow: 1 }}>
+        <div className="drawer-body" style={{ padding: '20px', overflowY: 'auto', flexGrow: 1, fontSize: '0.875rem' }}>
           {children}
         </div>
       </div>

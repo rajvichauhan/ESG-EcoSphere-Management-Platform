@@ -14,3 +14,8 @@ export { ReportsPage } from './ReportsPage';
 export { OrgSetupPage } from './OrgSetupPage';
 export { PublicPoliciesPage } from './PublicPoliciesPage';
 
+// New Pages
+export { LandingPage } from './LandingPage';
+export { NotFoundPage } from './NotFoundPage';
+export { AccessDeniedPage } from './AccessDeniedPage';
+export { LogoutPage } from './LogoutPage';

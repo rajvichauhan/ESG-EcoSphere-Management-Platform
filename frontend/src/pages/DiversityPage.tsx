@@ -57,7 +57,7 @@ export const DiversityPage: React.FC = () => {
   return (
     <div className="diversity-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
-      <div className="glass-panel" style={{ padding: '24px 28px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Diversity, Equity & Inclusion (DEI) Telemetry</h2>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
@@ -82,9 +82,9 @@ export const DiversityPage: React.FC = () => {
           <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Global Workforce Gender Distribution</h3>
           <DoughnutChart
             data={[
-              { label: 'Female Employees', value: 4620, color: 'hsl(340, 75%, 55%)' },
-              { label: 'Male Employees', value: 5180, color: 'hsl(215, 70%, 55%)' },
-              { label: 'Non-Binary & Undeclared', value: 200, color: 'hsl(280, 65%, 60%)' },
+              { label: 'Female Employees', value: 4620 },
+              { label: 'Male Employees', value: 5180 },
+              { label: 'Non-Binary & Undeclared', value: 200 },
             ]}
             height={240}
             centerText="10,000"
@@ -97,8 +97,8 @@ export const DiversityPage: React.FC = () => {
           <BarChart
             labels={['Entry / Junior', 'Mid-Level Specialist', 'Senior Manager', 'Director & VP', 'Executive Board']}
             series={[
-              { label: 'Female %', data: [52, 48, 43, 38, 41], color: 'hsl(340, 75%, 55%)' },
-              { label: 'Underrepresented Minority %', data: [38, 35, 31, 26, 28], color: 'hsl(38, 92%, 50%)' },
+               { label: 'Female %', data: [52, 48, 43, 38, 41] },
+               { label: 'Underrepresented Minority %', data: [38, 35, 31, 26, 28] },
             ]}
             height={240}
             unit="%"
@@ -135,29 +135,29 @@ export const DiversityPage: React.FC = () => {
         <form onSubmit={handleAddMetric}>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>CATEGORY</label>
-            <input type="text" required className="input" value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
+             <input type="text" required className="input" value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>DEMOGRAPHIC FACTOR</label>
-              <input type="text" required className="input" value={demographic} onChange={(e) => setDemographic(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>UNIT</label>
-              <input type="text" required className="input" value={unit} onChange={(e) => setUnit(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
-            </div>
+               <input type="text" required className="input" value={demographic} onChange={(e) => setDemographic(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
+             </div>
+             <div>
+               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>UNIT</label>
+               <input type="text" required className="input" value={unit} onChange={(e) => setUnit(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
+             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>CURRENT VALUE</label>
-              <input type="number" step="any" required className="input" value={value} onChange={(e) => setValue(parseFloat(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>TARGET GOAL</label>
-              <input type="number" step="any" required className="input" value={target} onChange={(e) => setTarget(parseFloat(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }} />
-            </div>
+               <input type="number" step="any" required className="input" value={value} onChange={(e) => setValue(parseFloat(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
+             </div>
+             <div>
+               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>TARGET GOAL</label>
+               <input type="number" step="any" required className="input" value={target} onChange={(e) => setTarget(parseFloat(e.target.value) || 0)} style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />
+             </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

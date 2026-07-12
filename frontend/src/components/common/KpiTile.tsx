@@ -12,9 +12,25 @@ export interface KpiTileProps {
 }
 
 export const KpiTile: React.FC<KpiTileProps> = ({ label, value, unit, delta, icon, color = 'primary', onClick }) => {
+  // Map delta direction colors to standard accents
+  const isUp = delta && delta.value > 0;
+  const isDown = delta && delta.value < 0;
+  
+  // Default delta color styling (e.g. blue for positive trend in ESG, red for warning)
+  let deltaColor = 'var(--text-muted)';
+  if (delta) {
+    if (label.toLowerCase().includes('carbon') || label.toLowerCase().includes('emission')) {
+      // For emissions, upward is bad (red), downward is good (blue)
+      deltaColor = isUp ? 'var(--accent-red)' : isDown ? 'var(--accent-blue)' : 'var(--text-muted)';
+    } else {
+      // For standard scores, upward is good (blue), downward is bad (red)
+      deltaColor = isUp ? 'var(--accent-blue)' : isDown ? 'var(--accent-red)' : 'var(--text-muted)';
+    }
+  }
+
   return (
     <div
-      className={`kpi-tile glass-card kpi-border-${color}`}
+      className="kpi-tile metric-card"
       onClick={onClick}
       style={{
         cursor: onClick ? 'pointer' : 'default',
@@ -24,24 +40,25 @@ export const KpiTile: React.FC<KpiTileProps> = ({ label, value, unit, delta, ico
         flexDirection: 'column',
         justifyContent: 'space-between',
         height: '100%',
+        borderRadius: 'var(--radius)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <span className="kpi-label" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <span className="metric-label" style={{ fontSize: '0.7rem', fontWeight: 700 }}>
           {label}
         </span>
         {icon && (
           <div
-            className={`kpi-icon-box bg-${color}`}
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: '10px',
+              width: 32,
+              height: 32,
+              border: '1px solid var(--border-subtle)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: color === 'primary' ? 'hsla(162, 75%, 35%, 0.12)' : 'hsla(215, 70%, 50%, 0.12)',
-              color: color === 'primary' ? 'hsl(162, 75%, 35%)' : 'hsl(215, 70%, 50%)',
+              color: 'var(--text-main)',
+              backgroundColor: 'var(--bg-surface)',
+              borderRadius: 'var(--radius)',
             }}
           >
             {icon}
@@ -50,11 +67,11 @@ export const KpiTile: React.FC<KpiTileProps> = ({ label, value, unit, delta, ico
       </div>
 
       <div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-          <span className="kpi-value" style={{ fontSize: '28px', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+          <span className="metric-value" style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>
             {value}
           </span>
-          {unit && <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>{unit}</span>}
+          {unit && <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>{unit}</span>}
         </div>
 
         {delta && (
@@ -63,15 +80,15 @@ export const KpiTile: React.FC<KpiTileProps> = ({ label, value, unit, delta, ico
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              marginTop: '8px',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: delta.value > 0 ? 'hsl(162, 75%, 35%)' : delta.value < 0 ? 'hsl(0, 80%, 55%)' : 'var(--text-muted)',
+              marginTop: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: deltaColor,
             }}
           >
-            {delta.value > 0 ? <TrendingUp size={15} /> : delta.value < 0 ? <TrendingDown size={15} /> : <Minus size={15} />}
+            {isUp ? <TrendingUp size={14} /> : isDown ? <TrendingDown size={14} /> : <Minus size={14} />}
             <span>{Math.abs(delta.value)}%</span>
-            <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: '12px' }}>{delta.label}</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 500, marginLeft: '2px' }}>{delta.label}</span>
           </div>
         )}
       </div>

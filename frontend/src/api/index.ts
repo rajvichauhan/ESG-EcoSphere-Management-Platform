@@ -55,7 +55,14 @@ export const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 function isNetworkError(err: any): boolean {
   if (!USE_MOCKS) return false;
   // `offline` is set by mapApiError when no HTTP response was received.
-  return err?.offline === true || err?.code === 'ERR_NETWORK' || err?.code === 'ECONNABORTED';
+  // Fall back to MockStorage for network errors or endpoints not implemented on the backend (404/405)
+  return (
+    err?.offline === true ||
+    err?.status === 404 ||
+    err?.status === 405 ||
+    err?.code === 'ERR_NETWORK' ||
+    err?.code === 'ECONNABORTED'
+  );
 }
 
 // ---------------------------------------------------------

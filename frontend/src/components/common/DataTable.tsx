@@ -84,21 +84,21 @@ export function DataTable<T extends Record<string, any>>({
   const paginatedData = displayData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="data-table-wrapper glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+    <div className="table-container" style={{ overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>
-        <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-glass)', background: 'hsla(var(--hue-primary), 20%, 50%, 0.05)' }}>
+            <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   onClick={() => handleHeaderClick(col)}
                   style={{
-                    padding: '14px 16px',
-                    fontSize: '12px',
+                    padding: '12px 16px',
+                    fontSize: '0.7rem',
                     fontWeight: 700,
                     textTransform: 'uppercase',
-                    letterSpacing: '0.6px',
+                    letterSpacing: '0.08em',
                     color: 'var(--text-muted)',
                     width: col.width,
                     textAlign: col.align || 'left',
@@ -109,8 +109,8 @@ export function DataTable<T extends Record<string, any>>({
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: col.align === 'right' ? 'flex-end' : 'flex-start', gap: '4px' }}>
                     <span>{col.header}</span>
                     {col.sortable && sortKey === col.key && (
-                      <span style={{ color: 'var(--color-primary)' }}>
-                        {sortDir === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      <span style={{ color: 'var(--accent-blue)' }}>
+                        {sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                       </span>
                     )}
                   </div>
@@ -123,14 +123,14 @@ export function DataTable<T extends Record<string, any>>({
               <tr
                 key={rowKey(row) + '_' + idx}
                 style={{
-                  borderBottom: idx === paginatedData.length - 1 ? 'none' : '1px solid var(--border-glass)',
-                  transition: 'background 0.2s ease',
+                  borderBottom: idx === paginatedData.length - 1 ? 'none' : '1px solid var(--border-subtle)',
+                  transition: 'var(--transition-fast)',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'hsla(var(--hue-primary), 50%, 50%, 0.04)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-surface)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 {columns.map((col) => (
-                  <td key={col.key} style={{ padding: '14px 16px', fontSize: '14px', textAlign: col.align || 'left' }}>
+                  <td key={col.key} style={{ padding: '12px 16px', fontSize: '0.85rem', textAlign: col.align || 'left' }}>
                     {col.render ? col.render(row, (currentPage - 1) * pageSize + idx) : row[col.key]}
                   </td>
                 ))}
@@ -146,35 +146,35 @@ export function DataTable<T extends Record<string, any>>({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '12px 16px',
-            borderTop: '1px solid var(--border-glass)',
-            background: 'hsla(var(--hue-primary), 20%, 50%, 0.03)',
-            fontSize: '13px',
+            padding: '10px 16px',
+            borderTop: '1px solid var(--border-subtle)',
+            background: 'var(--bg-surface)',
+            fontSize: '0.8rem',
             color: 'var(--text-muted)',
           }}
         >
           <div>
             Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, displayData.length)} of {displayData.length} entries
           </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
               className="btn btn-secondary"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              style={{ padding: '4px 8px', display: 'flex', alignItems: 'center' }}
+              style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center' }}
             >
-              <ChevronLeft size={16} /> Prev
+              <ChevronLeft size={14} /> Prev
             </button>
-            <span style={{ display: 'flex', alignItems: 'center', padding: '0 8px', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-main)' }}>
               Page {currentPage} of {totalPages}
             </span>
             <button
               className="btn btn-secondary"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              style={{ padding: '4px 8px', display: 'flex', alignItems: 'center' }}
+              style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center' }}
             >
-              Next <ChevronRight size={16} />
+              Next <ChevronRight size={14} />
             </button>
           </div>
         </div>

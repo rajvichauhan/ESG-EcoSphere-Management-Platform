@@ -95,8 +95,8 @@ export const PublicPoliciesPage: React.FC<PublicPoliciesPageProps> = ({ onBackTo
     <div
       style={{
         minHeight: '100vh',
-        width: '100vw',
-        background: 'radial-gradient(circle at 10% 20%, hsla(162, 75%, 35%, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, hsla(215, 70%, 50%, 0.1) 0%, transparent 40%), var(--bg-main)',
+        width: '100%',
+        background: 'var(--bg-app)',
         padding: '36px 24px',
         display: 'flex',
         flexDirection: 'column',
@@ -110,7 +110,7 @@ export const PublicPoliciesPage: React.FC<PublicPoliciesPageProps> = ({ onBackTo
           <button
             onClick={onBackToLogin}
             className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '12px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: 'var(--radius)' }}
           >
             <ArrowLeft size={16} /> Back to Login
           </button>
@@ -120,10 +120,10 @@ export const PublicPoliciesPage: React.FC<PublicPoliciesPageProps> = ({ onBackTo
         </div>
 
         {/* Hero Section */}
-        <div className="glass-panel" style={{ padding: '32px 36px', borderRadius: '24px', marginBottom: '36px', border: '1px solid var(--border-glass)' }}>
+        <div className="glass-panel" style={{ padding: '24px 28px', borderRadius: 'var(--radius)', marginBottom: '36px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '12px', background: 'linear-gradient(135deg, hsl(162, 75%, 40%), hsl(215, 70%, 55%))', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: '#fff' }}>
-              <ShieldCheck size={28} />
+            <div style={{ width: 42, height: 42, borderRadius: 'var(--radius)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--text-main)', backgroundColor: 'var(--bg-surface)' }}>
+              <ShieldCheck size={24} />
             </div>
             <div>
               <h1 style={{ fontSize: '28px', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Sustainability & Governance Registry</h1>
@@ -138,10 +138,10 @@ export const PublicPoliciesPage: React.FC<PublicPoliciesPageProps> = ({ onBackTo
         {loading ? (
           <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--text-muted)' }}>Loading public policies...</div>
         ) : policies.length === 0 ? (
-          <div className="glass-panel" style={{ textAlign: 'center', padding: '64px 24px', borderRadius: '24px' }}>
+          <div className="glass-panel" style={{ textAlign: 'center', padding: '64px 24px', borderRadius: 'var(--radius)' }}>
             <Globe size={48} color="var(--text-muted)" style={{ marginBottom: '16px', opacity: 0.5 }} />
             <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 8px 0', color: 'var(--text-main)' }}>No Public Policies Published</h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxW: '400px', margin: '0 auto' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto' }}>
               The organization has not registered any public-facing ESG compliance policies yet.
             </p>
           </div>
@@ -157,12 +157,10 @@ export const PublicPoliciesPage: React.FC<PublicPoliciesPageProps> = ({ onBackTo
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  borderLeft: '4px solid var(--color-primary)',
-                  transition: 'transform 0.2s ease',
+                  borderLeft: '3px solid var(--accent-blue)',
                   padding: '24px',
+                  borderRadius: 'var(--radius)'
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
               >
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>

@@ -1,20 +1,43 @@
 import React, { useState } from 'react';
-import { TreePine, Lock, Mail, User, Building, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { TreePine, Lock, Mail, User, Building, ArrowRight, ShieldCheck, CheckCircle2, Landmark, UserCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: () => void }> = ({ onSuccess, onViewPublicPolicies }) => {
+interface AuthPageProps {
+  initialMode?: 'login' | 'register';
+  onSuccess: () => void;
+  onViewPublicPolicies?: () => void;
+  onBackToLanding?: () => void;
+}
+
+export const AuthPage: React.FC<AuthPageProps> = ({
+  initialMode = 'login',
+  onSuccess,
+  onViewPublicPolicies,
+  onBackToLanding,
+}) => {
   const { login, verifyOtp, register } = useAuth();
   const { showToast } = useToast();
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [step, setStep] = useState<'creds' | 'otp'>('creds');
+  
+  // Registration paths: 'corporate' (new organization creation) or 'individual' (joining an existing organization)
+  const [regPath, setRegPath] = useState<'corporate' | 'individual'>('corporate');
 
   // Form fields
   const [email, setEmail] = useState('orgadmin@ecosphere.demo');
   const [password, setPassword] = useState('password123');
   const [fullName, setFullName] = useState('Sarah Jenkins (Sustainability Dir)');
+  
+  // Corporate specific
+  const [orgName, setOrgName] = useState('Acme Sustainability Group');
   const [orgId, setOrgId] = useState('org_acme_001');
+  const [industrySector, setIndustrySector] = useState('Manufacturing');
+  
+  // Individual specific
+  const [inviteCode, setInviteCode] = useState('INV-ACME-4022');
+
   const [otpCode, setOtpCode] = useState('123456');
   const [loading, setLoading] = useState(false);
 
@@ -24,17 +47,27 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
     try {
       if (mode === 'login') {
         const res = await login(email, password);
-        if (res?.otpRequired || email.includes('admin') || true) {
+        if (res?.otpRequired || email.includes('demo') || email.includes('admin') || true) {
           setStep('otp');
           showToast('Verification code sent to your email (Demo code: 123456)', 'info');
         } else {
           onSuccess();
         }
       } else {
-        await register({ email, password, full_name: fullName, org_id: orgId });
-        showToast('Account created successfully! Please verify your email.', 'success');
-        setMode('login');
-        setStep('creds');
+        // Registration submission
+        const submitData = {
+          email,
+          password,
+          full_name: fullName,
+          // If individual, join existing org, else configure new org
+          org_id: regPath === 'individual' ? inviteCode : orgId,
+          // Additional metadata for corporate path
+          org_name: regPath === 'corporate' ? orgName : undefined,
+          sector: regPath === 'corporate' ? industrySector : undefined,
+        };
+        await register(submitData);
+        showToast('Registration complete! Verification code sent.', 'success');
+        setStep('otp');
       }
     } catch (err: any) {
       showToast(err?.detail || err?.message || 'Authentication failed. Check credentials.', 'error');
@@ -48,7 +81,7 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
     setLoading(true);
     try {
       await verifyOtp(email, otpCode, mode === 'login' ? 'login' : 'register');
-      showToast('Authentication successful! Welcome to EcoSphere.', 'success');
+      showToast('Authentication successful. Session established.', 'success');
       onSuccess();
     } catch (err: any) {
       showToast(err?.detail || 'Invalid verification code. Use 123456 for demo.', 'error');
@@ -61,13 +94,13 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
     <div
       style={{
         minHeight: '100vh',
-        width: '100vw',
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        position: 'relative',
-        background: 'radial-gradient(circle at 15% 30%, hsla(162, 75%, 35%, 0.15) 0%, transparent 45%), radial-gradient(circle at 85% 75%, hsla(215, 70%, 50%, 0.15) 0%, transparent 45%), var(--bg-main)',
+        backgroundColor: 'var(--bg-app)',
+        color: 'var(--text-main)',
       }}
     >
       <div
@@ -75,66 +108,55 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
         style={{
           width: '100%',
           maxWidth: '480px',
-          borderRadius: '24px',
-          padding: '40px 36px',
-          boxShadow: '0 32px 80px hsla(0, 0%, 0%, 0.5)',
-          border: '1px solid var(--border-glass)',
-          position: 'relative',
-          overflow: 'hidden',
+          padding: '40px 32px',
+          border: '1px solid var(--border)',
+          backgroundColor: 'var(--bg-card)',
+          borderRadius: 'var(--radius)',
         }}
       >
         {/* Brand Header */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px', textAlign: 'center' }}>
           <div
             style={{
-              width: 56,
-              height: 56,
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, hsl(162, 75%, 40%), hsl(215, 70%, 55%))',
+              width: 42,
+              height: 42,
+              border: '1px solid var(--text-main)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#fff',
-              boxShadow: '0 8px 24px hsla(162, 75%, 40%, 0.35)',
-              marginBottom: '16px',
+              color: 'var(--text-main)',
+              marginBottom: '12px',
             }}
           >
-            <TreePine size={32} />
+            <TreePine size={24} />
           </div>
-          <h2
-            style={{
-              fontSize: '26px',
-              fontWeight: 800,
-              fontFamily: 'var(--font-display)',
-              letterSpacing: '-0.5px',
-              margin: 0,
-              background: 'linear-gradient(135deg, hsl(162, 75%, 45%), hsl(215, 70%, 65%))',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            EcoSphere ESG Platform
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, fontFamily: 'var(--font-display)', margin: 0 }}>
+            EcoSphere Platform
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px' }}>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-body)' }}>
             Enterprise Sustainability, Carbon Intelligence & Governance
           </p>
         </div>
 
         {step === 'creds' ? (
           <form onSubmit={handleSubmitCreds}>
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--border-glass)', marginBottom: '24px' }}>
+            {/* Login / Register Tab Switches */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--border-subtle)', marginBottom: '24px' }}>
               <button
                 type="button"
-                onClick={() => setMode('login')}
+                onClick={() => {
+                  setMode('login');
+                  setEmail('orgadmin@ecosphere.demo');
+                }}
                 style={{
                   flex: 1,
-                  padding: '12px',
+                  padding: '10px',
                   background: 'transparent',
                   border: 'none',
-                  borderBottom: mode === 'login' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  color: mode === 'login' ? 'var(--color-primary)' : 'var(--text-muted)',
+                  borderBottom: mode === 'login' ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                  color: mode === 'login' ? 'var(--text-main)' : 'var(--text-muted)',
                   fontWeight: 700,
-                  fontSize: '14px',
+                  fontSize: '0.85rem',
                   cursor: 'pointer',
                 }}
               >
@@ -142,16 +164,19 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
               </button>
               <button
                 type="button"
-                onClick={() => setMode('register')}
+                onClick={() => {
+                  setMode('register');
+                  setEmail('');
+                }}
                 style={{
                   flex: 1,
-                  padding: '12px',
+                  padding: '10px',
                   background: 'transparent',
                   border: 'none',
-                  borderBottom: mode === 'register' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  color: mode === 'register' ? 'var(--color-primary)' : 'var(--text-muted)',
+                  borderBottom: mode === 'register' ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                  color: mode === 'register' ? 'var(--text-main)' : 'var(--text-muted)',
                   fontWeight: 700,
-                  fontSize: '14px',
+                  fontSize: '0.85rem',
                   cursor: 'pointer',
                 }}
               >
@@ -159,70 +184,168 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
               </button>
             </div>
 
+            {/* Split registration paths */}
             {mode === 'register' && (
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: '4px', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius)' }}>
+                <button
+                  type="button"
+                  onClick={() => setRegPath('corporate')}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    background: regPath === 'corporate' ? 'var(--bg-card)' : 'transparent',
+                    border: regPath === 'corporate' ? '1px solid var(--border-subtle)' : 'none',
+                    color: regPath === 'corporate' ? 'var(--accent-blue)' : 'var(--text-muted)',
+                  }}
+                >
+                  <Landmark size={12} />
+                  Corporate Org
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRegPath('individual')}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    background: regPath === 'individual' ? 'var(--bg-card)' : 'transparent',
+                    border: regPath === 'individual' ? '1px solid var(--border-subtle)' : 'none',
+                    color: regPath === 'individual' ? 'var(--accent-blue)' : 'var(--text-muted)',
+                  }}
+                >
+                  <UserCheck size={12} />
+                  Individual User
+                </button>
+              </div>
+            )}
+
+            {/* Common Name field for Registration */}
+            {mode === 'register' && (
+              <div style={{ marginBottom: '16px' }}>
+                <label>Full Name</label>
+                <div style={{ position: 'relative' }}>
+                  <User size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 12 }} />
+                  <input
+                    type="text"
+                    required
+                    className="input"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Jane Doe"
+                    style={{ paddingLeft: '36px' }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Corporate Registration Pathway */}
+            {mode === 'register' && regPath === 'corporate' && (
               <>
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                    FULL NAME
-                  </label>
+                  <label>Organization Name</label>
                   <div style={{ position: 'relative' }}>
-                    <User size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 13 }} />
+                    <Building size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 12 }} />
                     <input
                       type="text"
                       required
                       className="input"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Jane Doe"
-                      style={{ width: '100%', padding: '10px 14px 10px 42px' }}
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      placeholder="Acme Industries Ltd."
+                      style={{ paddingLeft: '36px' }}
                     />
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                    ORGANIZATION ID / CODE
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <Building size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 13 }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  <div>
+                    <label>Org ID (Target Code)</label>
                     <input
                       type="text"
+                      required
                       className="input"
                       value={orgId}
                       onChange={(e) => setOrgId(e.target.value)}
-                      placeholder="e.g. org_acme_001"
-                      style={{ width: '100%', padding: '10px 14px 10px 42px' }}
+                      placeholder="org_acme_001"
                     />
+                  </div>
+                  <div>
+                    <label>Industry Sector</label>
+                    <select
+                      className="input"
+                      value={industrySector}
+                      onChange={(e) => setIndustrySector(e.target.value)}
+                    >
+                      <option value="Manufacturing">Manufacturing</option>
+                      <option value="Energy & Power">Energy & Power</option>
+                      <option value="Tech & Services">Tech & Services</option>
+                      <option value="Retail & Goods">Retail & Goods</option>
+                    </select>
                   </div>
                 </div>
               </>
             )}
 
+            {/* Individual Registration Pathway */}
+            {mode === 'register' && regPath === 'individual' && (
+              <div style={{ marginBottom: '16px' }}>
+                <label>Organization Invite Code</label>
+                <div style={{ position: 'relative' }}>
+                  <Building size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 12 }} />
+                  <input
+                    type="text"
+                    required
+                    className="input"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    placeholder="e.g. INV-ACME-4022"
+                    style={{ paddingLeft: '36px' }}
+                  />
+                </div>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  Obtain this from your administrator to join an existing organization ledger.
+                </span>
+              </div>
+            )}
+
+            {/* Email Address */}
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                EMAIL ADDRESS
-              </label>
+              <label>Email Address</label>
               <div style={{ position: 'relative' }}>
-                <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 13 }} />
+                <Mail size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 12 }} />
                 <input
                   type="email"
                   required
                   className="input"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="user@ecosphere.com"
-                  style={{ width: '100%', padding: '10px 14px 10px 42px' }}
+                  placeholder="user@organization.com"
+                  style={{ paddingLeft: '36px' }}
                 />
               </div>
             </div>
 
+            {/* Password */}
             <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>PASSWORD</label>
-                {mode === 'login' && <span style={{ fontSize: '12px', color: 'var(--color-primary)', cursor: 'pointer' }}>Forgot?</span>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <label style={{ margin: 0 }}>Password</label>
+                {mode === 'login' && <span style={{ fontSize: '11px', color: 'var(--accent-blue)', cursor: 'pointer', fontWeight: 600 }}>Forgot?</span>}
               </div>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 13 }} />
+                <Lock size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 12 }} />
                 <input
                   type="password"
                   required
@@ -230,7 +353,7 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  style={{ width: '100%', padding: '10px 14px 10px 42px' }}
+                  style={{ paddingLeft: '36px' }}
                 />
               </div>
             </div>
@@ -239,31 +362,36 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
               type="submit"
               disabled={loading}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '14px', fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ width: '100%', padding: '12px', fontSize: '0.9rem', fontWeight: 700 }}
             >
-              <span>{loading ? 'Processing...' : mode === 'login' ? 'Sign In & Verify' : 'Create Account'}</span>
-              <ArrowRight size={18} />
+              <span>{loading ? 'Processing...' : mode === 'login' ? 'Sign In & Verify' : 'Create Platform Account'}</span>
+              <ArrowRight size={14} style={{ marginLeft: '4px' }} />
             </button>
 
             {mode === 'login' && (
               <>
-                <div style={{ marginTop: '20px', padding: '12px', borderRadius: '12px', background: 'hsla(var(--hue-primary), 30%, 50%, 0.05)', border: '1px dashed var(--border-glass)', fontSize: '12px', color: 'var(--text-muted)' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>🚀 Instant Demo Accounts:</div>
-                  <div>• Master Admin: <code style={{ color: 'var(--color-primary)' }}>master@ecosphere.demo</code></div>
-                  <div>• Org Admin: <code style={{ color: 'var(--color-primary)' }}>orgadmin@ecosphere.demo</code></div>
-                  <div>• Dept Head: <code style={{ color: 'var(--color-primary)' }}>depthead@ecosphere.demo</code></div>
-                  <div style={{ marginTop: '4px', fontStyle: 'italic' }}>Any password works (`password123`). OTP demo code: `123456`.</div>
+                {/* Demo Accounts Panel */}
+                <div style={{ marginTop: '20px', padding: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Demo Credentials
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div>Master Admin: <code style={{ color: 'var(--text-main)', fontWeight: 600 }}>master@ecosphere.demo</code></div>
+                    <div>Org Admin: <code style={{ color: 'var(--text-main)', fontWeight: 600 }}>orgadmin@ecosphere.demo</code></div>
+                    <div>Dept Head: <code style={{ color: 'var(--text-main)', fontWeight: 600 }}>depthead@ecosphere.demo</code></div>
+                    <div style={{ marginTop: '4px', fontSize: '0.7rem', fontStyle: 'italic' }}>Any password works. MFA verification code: `123456`.</div>
+                  </div>
                 </div>
 
                 {onViewPublicPolicies && (
-                  <div style={{ margin: '20px 0 10px 0', borderTop: '1px solid var(--border-glass)', paddingTop: '16px', textAlign: 'center' }}>
+                  <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', textAlign: 'center' }}>
                     <button
                       type="button"
                       onClick={onViewPublicPolicies}
                       className="btn btn-secondary"
-                      style={{ width: '100%', padding: '10px 14px', fontSize: '13px', fontWeight: 600 }}
+                      style={{ width: '100%', padding: '8px 12px', fontSize: '0.8rem' }}
                     >
-                      View Public Policies & Governance (NGO/Public)
+                      View Public Policies & Disclosures
                     </button>
                   </div>
                 )}
@@ -273,17 +401,17 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
         ) : (
           <form onSubmit={handleVerifyOtp} style={{ textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'hsla(162, 75%, 40%, 0.15)', color: 'hsl(162, 75%, 40%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ShieldCheck size={32} />
+              <div style={{ width: 48, height: 48, border: '1px solid var(--accent-blue)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ShieldCheck size={24} />
               </div>
             </div>
 
-            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px', color: 'var(--text-main)' }}>Multi-Factor Authentication</h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
-              Enter the 6-digit security verification code sent to <strong style={{ color: 'var(--text-main)' }}>{email}</strong>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '4px', color: 'var(--text-main)', fontFamily: 'var(--font-display)' }}>Multi-Factor Authentication</h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Enter the 6-digit verification code sent to <strong style={{ color: 'var(--text-main)' }}>{email}</strong>
             </p>
 
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <input
                 type="text"
                 required
@@ -292,15 +420,15 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
                 onChange={(e) => setOtpCode(e.target.value)}
                 placeholder="123456"
                 style={{
-                  width: '200px',
-                  padding: '14px',
-                  fontSize: '24px',
+                  width: '180px',
+                  padding: '10px',
+                  fontSize: '1.5rem',
                   fontWeight: 800,
-                  letterSpacing: '8px',
+                  letterSpacing: '6px',
                   textAlign: 'center',
-                  borderRadius: '12px',
-                  border: '2px solid var(--color-primary)',
-                  background: 'var(--bg-card)',
+                  borderRadius: 'var(--radius)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-app)',
                   color: 'var(--text-main)',
                 }}
               />
@@ -310,9 +438,9 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
               type="submit"
               disabled={loading}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '14px', fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ width: '100%', padding: '12px', fontSize: '0.9rem', fontWeight: 700 }}
             >
-              <CheckCircle2 size={18} />
+              <CheckCircle2 size={16} style={{ marginRight: '4px' }} />
               <span>Verify & Launch Platform</span>
             </button>
 
@@ -320,12 +448,26 @@ export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: 
               <button
                 type="button"
                 onClick={() => setStep('creds')}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Back to credentials
               </button>
             </div>
           </form>
+        )}
+
+        {onBackToLanding && (
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <button
+              type="button"
+              onClick={onBackToLanding}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', cursor: 'pointer' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+            >
+              ← Back to Portal Home
+            </button>
+          </div>
         )}
       </div>
     </div>

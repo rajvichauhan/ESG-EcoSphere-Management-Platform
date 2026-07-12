@@ -12,24 +12,24 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ value, status, type = 
   const val = value || status || '';
   const norm = val.toLowerCase().replace(/_/g, ' ');
 
-  let badgeClass = 'badge badge-neutral';
+  let badgeClass = 'badge';
 
   if (overdue) {
-    badgeClass = 'badge badge-danger badge-pulse';
+    badgeClass = 'badge badge-danger';
   } else if (type === 'severity') {
     if (norm === 'critical') badgeClass = 'badge badge-danger';
     else if (norm === 'high') badgeClass = 'badge badge-warning';
     else if (norm === 'medium') badgeClass = 'badge badge-info';
-    else badgeClass = 'badge badge-neutral';
+    else badgeClass = 'badge';
   } else if (type === 'approximation') {
     if (value === 'true' || value === 'Approx') badgeClass = 'badge badge-warning';
     else badgeClass = 'badge badge-success';
   } else {
-    // Standard status -> color mapping (§7)
+    // Standard status -> color mapping
     if (['active', 'completed', 'approved', 'confirmed', 'current', 'on track', 'published', 'achieved', 'exact'].includes(norm)) {
       badgeClass = 'badge badge-success';
     } else if (['draft', 'pending', 'planned', 'joined', 'scheduled', 'invited'].includes(norm)) {
-      badgeClass = 'badge badge-neutral';
+      badgeClass = 'badge';
     } else if (['under review', 'in progress', 'submitted', 'at risk'].includes(norm)) {
       badgeClass = 'badge badge-info';
     } else if (['rejected', 'cancelled', 'revoked', 'superseded', 'closed', 'archived', 'discontinued', 'missed', 'retired', 'suspended'].includes(norm)) {
@@ -38,9 +38,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ value, status, type = 
   }
 
   return (
-    <span className={badgeClass} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-      {overdue && <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'currentColor' }} />}
-      {labelOverride || (overdue ? `OVERDUE (${norm})` : norm.toUpperCase())}
+    <span className={badgeClass} style={{ whiteSpace: 'nowrap' }}>
+      <span className="badge-dot" style={{ display: 'inline-block' }} />
+      <span style={{ fontSize: '10px' }}>{labelOverride || (overdue ? `OVERDUE (${norm})` : norm.toUpperCase())}</span>
     </span>
   );
 };

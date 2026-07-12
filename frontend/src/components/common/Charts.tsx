@@ -1,14 +1,14 @@
 import React from 'react';
 
-// Curated categorical HSL palette (§7 Design System / Charts)
+// Curated Editorial Chart Palette (Neutral grays + Slate + Accent Blue & Red)
 export const CHART_COLORS = [
-  'hsl(162, 75%, 40%)', // Emerald
-  'hsl(215, 70%, 55%)', // Blue
-  'hsl(38, 92%, 50%)',  // Amber
-  'hsl(280, 65%, 60%)', // Purple
-  'hsl(340, 75%, 55%)', // Rose
-  'hsl(180, 70%, 45%)', // Cyan
-  'hsl(85, 65%, 45%)',  // Lime
+  '#1066e5', // Accent Blue
+  '#71717a', // Muted Zinc Gray
+  '#27272a', // Dark Zinc Gray
+  '#4b5563', // Slate Gray
+  '#a1a1aa', // Light Muted Zinc
+  '#18181b', // Charcoal
+  '#e02424', // Accent Red
 ];
 
 export interface ChartDataSeries {
@@ -47,7 +47,7 @@ export const BarChart: React.FC<BarChartProps> = ({ labels, series, height = 260
 
   return (
     <div className="chart-container" style={{ width: '100%', height: `${height}px`, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flexGrow: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-glass)' }}>
+      <div style={{ flexGrow: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
         {labels.map((lbl, idx) => {
           return (
             <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', gap: '4px' }}>
@@ -65,16 +65,16 @@ export const BarChart: React.FC<BarChartProps> = ({ labels, series, height = 260
                         height: stacked ? undefined : `${pct}%`,
                         width: stacked ? '80%' : undefined,
                         background: color,
-                        borderRadius: stacked ? (sIdx === series.length - 1 ? '4px 4px 0 0' : 0) : '4px 4px 0 0',
-                        transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-                        minHeight: val > 0 ? '4px' : 0,
-                        boxShadow: '0 2px 8px hsla(0, 0%, 0%, 0.15)',
+                        borderRadius: 0, // Sharp rectangular bars
+                        transition: 'var(--transition-fast)',
+                        minHeight: val > 0 ? '2px' : 0,
+                        boxShadow: 'none', // Flat, no drop shadows
                       }}
                     />
                   );
                 })}
               </div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
+              <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center' }}>
                 {lbl}
               </span>
             </div>
@@ -85,8 +85,8 @@ export const BarChart: React.FC<BarChartProps> = ({ labels, series, height = 260
       {/* Legend */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '12px', justifyContent: 'center' }}>
         {series.map((s, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>
-            <span style={{ width: 10, height: 10, borderRadius: '3px', background: s.color || CHART_COLORS[i % CHART_COLORS.length] }} />
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+            <span style={{ width: 8, height: 8, background: s.color || CHART_COLORS[i % CHART_COLORS.length] }} />
             <span>{s.label}</span>
           </div>
         ))}
@@ -108,9 +108,9 @@ export const DoughnutChart: React.FC<DoughnutChartProps> = ({ data, height = 220
 
   // Build SVG conic or ring paths
   let accPct = 0;
-  const size = 160;
+  const size = 150;
   const radius = 60;
-  const strokeWidth = 24;
+  const strokeWidth = 16;
   const circumference = 2 * Math.PI * radius;
 
   return (
@@ -143,20 +143,20 @@ export const DoughnutChart: React.FC<DoughnutChartProps> = ({ data, height = 220
 
         {(centerText !== undefined || centerSub !== undefined) && (
           <div style={{ position: 'absolute', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {centerText && <span style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>{centerText}</span>}
-            {centerSub && <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>{centerSub}</span>}
+            {centerText && <span style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--text-main)', lineHeight: 1 }}>{centerText}</span>}
+            {centerSub && <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px' }}>{centerSub}</span>}
           </div>
         )}
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {data.map((d, i) => {
           const pct = Math.round((d.value / total) * 100);
           const color = d.color || CHART_COLORS[i % CHART_COLORS.length];
           return (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
-              <span style={{ width: 12, height: 12, borderRadius: '3px', background: color }} />
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: 600 }}>
+              <span style={{ width: 8, height: 8, background: color }} />
               <span style={{ color: 'var(--text-main)', minWidth: '90px' }}>{d.label}</span>
               <span style={{ color: 'var(--text-muted)', marginLeft: 'auto' }}>
                 {d.value.toLocaleString()} {unit} ({pct}%)

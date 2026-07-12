@@ -83,14 +83,14 @@ export const CarbonReferencesPage: React.FC = () => {
   return (
     <div className="carbon-references-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header Banner */}
-      <div className="glass-card header-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderRadius: '16px', background: 'var(--bg-glass)', border: '1px solid var(--border-glass)' }}>
+      <div className="glass-card header-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <span className="badge badge-primary">Standardized ESG Library (#15)</span>
             <span className="badge badge-info">DEFRA & GHG Protocol 2026</span>
           </div>
           <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Database className="text-primary" size={26} /> Verified Carbon Reference Factors
+            <Database color="var(--accent-blue)" size={26} /> Verified Carbon Reference Factors
           </h1>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
             Authoritative baseline emission factors used across the platform to compute scope 1, 2, and 3 footprint calculations.
@@ -111,7 +111,7 @@ export const CarbonReferencesPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderRadius: '12px' }}>
+      <div className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderRadius: 'var(--radius)' }}>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
           <div style={{ position: 'relative', width: '280px' }}>
             <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-muted)' }} />
@@ -121,7 +121,7 @@ export const CarbonReferencesPage: React.FC = () => {
               className="input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', paddingLeft: 36, background: 'var(--bg-card)', border: '1px solid var(--border-glass)', borderRadius: '8px', color: 'var(--text-main)' }}
+              style={{ width: '100%', paddingLeft: 36, background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius)', color: 'var(--text-main)' }}
             />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)' }}>
@@ -130,7 +130,7 @@ export const CarbonReferencesPage: React.FC = () => {
               className="input"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-glass)', borderRadius: '8px', padding: '6px 12px', color: 'var(--text-main)', fontWeight: 600 }}
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius)', padding: '6px 12px', color: 'var(--text-main)', fontWeight: 600 }}
             >
               {categories.map((c) => (
                 <option key={c} value={c}>
@@ -196,9 +196,9 @@ export const CarbonReferencesPage: React.FC = () => {
       {/* Audit History Drawer */}
       <Drawer open={historyOpen} title={`Audit History: ${activeRow?.name || activeRow?.product_name || 'Factor'}`} onClose={() => setHistoryOpen(false)} width="480px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ padding: '16px', borderRadius: '12px', background: 'hsla(162, 75%, 40%, 0.1)', border: '1px solid hsla(162, 75%, 40%, 0.3)' }}>
+          <div style={{ padding: '16px', borderRadius: 'var(--radius)', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current Active Value:</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: 'hsl(162, 75%, 40%)' }}>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--accent-blue)' }}>
               {activeRow?.kg_co2_per_unit ?? activeRow?.carbon_value ?? 0} kg CO₂ / {activeRow?.unit}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Source: {activeRow?.source || 'Standard'}</div>
@@ -212,7 +212,7 @@ export const CarbonReferencesPage: React.FC = () => {
             <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>No previous revisions recorded.</div>
           ) : (
             historyList.map((h: any, idx) => (
-              <div key={h._id || idx} className="glass-card" style={{ padding: '14px', borderRadius: '12px', borderLeft: '3px solid var(--color-primary)' }}>
+              <div key={h._id || idx} className="glass-card" style={{ padding: '14px', borderRadius: 'var(--radius)', borderLeft: '3px solid var(--accent-blue)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <span style={{ fontWeight: 700, fontSize: '14px' }}>
                     {h.old_value} → <span style={{ color: 'var(--color-primary)' }}>{h.new_value}</span> kg CO₂/{activeRow?.unit}
@@ -240,7 +240,7 @@ export const CarbonReferencesPage: React.FC = () => {
               className="input"
               value={editItem.name || ''}
               onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }}
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
             />
           </div>
 
@@ -251,7 +251,7 @@ export const CarbonReferencesPage: React.FC = () => {
                 className="input"
                 value={editItem.category || 'Electricity'}
                 onChange={(e) => setEditItem({ ...editItem, category: e.target.value })}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)', fontWeight: 600 }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', fontWeight: 600 }}
               >
                 <option value="Electricity">Electricity</option>
                 <option value="Stationary Combustion">Stationary Combustion</option>
@@ -269,7 +269,7 @@ export const CarbonReferencesPage: React.FC = () => {
                 className="input"
                 value={editItem.unit || ''}
                 onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
               />
             </div>
           </div>
@@ -285,7 +285,7 @@ export const CarbonReferencesPage: React.FC = () => {
                 className="input"
                 value={editItem.kg_co2_per_unit !== undefined ? editItem.kg_co2_per_unit : 0}
                 onChange={(e) => setEditItem({ ...editItem, kg_co2_per_unit: parseFloat(e.target.value) || 0 })}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
               />
             </div>
             <div>
@@ -296,7 +296,7 @@ export const CarbonReferencesPage: React.FC = () => {
                 className="input"
                 value={editItem.source || ''}
                 onChange={(e) => setEditItem({ ...editItem, source: e.target.value })}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-glass)', background: 'var(--bg-card)' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }}
               />
             </div>
           </div>

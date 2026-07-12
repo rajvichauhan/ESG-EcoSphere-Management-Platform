@@ -85,7 +85,6 @@ const NAV_GROUPS: NavGroup[] = [
     groupLabel: 'Gamification & Reports',
     items: [
       { key: 'gamification', label: 'Challenges & Rewards', icon: <Trophy size={18} /> },
-      { key: 'leaderboard', label: 'Leaderboard', icon: <Award size={18} /> },
       { key: 'reports', label: 'Reports & Intelligence', icon: <FileSpreadsheet size={18} /> },
       { key: 'ai-assistant', label: 'AI ESG Assistant', icon: <Zap size={18} /> },
     ],
@@ -108,7 +107,7 @@ const NAV_GROUPS: NavGroup[] = [
 ];
 
 export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, children }) => {
-  const { user, roles, logout, switchUserMock } = useAuth();
+  const { user, roles, switchUserMock } = useAuth();
   const { showToast } = useToast();
 
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('ecosphere_sidebar') === 'collapsed');
@@ -159,29 +158,27 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
   }
 
   return (
-    <div className="app-shell" style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+    <div className="app-shell" style={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', backgroundColor: 'var(--bg-app)' }}>
       {/* Sidebar Backdrop for mobile */}
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
-          style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 999 }}
+          style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh', background: 'rgba(0,0,0,0.4)', zIndex: 999 }}
         />
       )}
 
       {/* Sidebar Navigation */}
       <aside
-        className="app-sidebar glass-panel"
+        className={`app-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}
         style={{
-          width: collapsed ? '76px' : '260px',
+          width: collapsed ? '72px' : '250px',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          transition: 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-          borderRight: '1px solid var(--border-glass)',
-          position: mobileOpen ? 'fixed' : 'relative',
-          left: mobileOpen ? 0 : undefined,
+          transition: 'width 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), left 0.2s ease',
+          borderRight: '1px solid var(--border-subtle)',
           zIndex: 1000,
-          background: 'var(--bg-glass)',
+          background: 'var(--bg-card)',
           flexShrink: 0,
         }}
       >
@@ -192,45 +189,55 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
             alignItems: 'center',
             justifyContent: collapsed ? 'center' : 'space-between',
             padding: '20px 16px',
-            borderBottom: '1px solid var(--border-glass)',
+            borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
             <div
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, hsl(162, 75%, 40%), hsl(215, 70%, 55%))',
+                width: 32,
+                height: 32,
+                border: '1px solid var(--text-main)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
-                boxShadow: '0 4px 12px hsla(162, 75%, 40%, 0.3)',
+                color: 'var(--text-main)',
                 flexShrink: 0,
               }}
             >
-              <TreePine size={22} />
+              <TreePine size={18} />
             </div>
             {!collapsed && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-display)', letterSpacing: '-0.3px', background: 'linear-gradient(135deg, hsl(162, 75%, 40%), hsl(215, 70%, 65%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 800, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', color: 'var(--text-main)' }}>
                   EcoSphere
                 </span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   ESG Platform
                 </span>
               </div>
             )}
           </div>
-          <button
-            className="btn-icon hidden-mobile"
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-          >
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          </button>
+          {!collapsed && (
+            <button
+              className="btn-icon"
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse sidebar"
+              style={{ padding: '4px' }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+          )}
+          {collapsed && (
+            <button
+              className="btn-icon"
+              onClick={() => setCollapsed(false)}
+              aria-label="Expand sidebar"
+              style={{ padding: '4px', position: 'absolute', right: '-12px', top: '24px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '50%' }}
+            >
+              <ChevronRight size={12} />
+            </button>
+          )}
         </div>
 
         {/* Navigation List */}
@@ -250,12 +257,12 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
                 {!collapsed && (
                   <div
                     style={{
-                      fontSize: '11px',
+                      fontSize: '9px',
                       fontWeight: 700,
                       color: 'var(--text-muted)',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.8px',
-                      padding: '6px 12px',
+                      letterSpacing: '0.08em',
+                      padding: '4px 12px',
                       marginBottom: '4px',
                     }}
                   >
@@ -276,25 +283,30 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
                         width: '100%',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '12px',
-                        padding: collapsed ? '12px' : '10px 14px',
+                        gap: '10px',
+                        padding: collapsed ? '10px' : '8px 12px',
                         justifyContent: collapsed ? 'center' : 'flex-start',
-                        background: isActive ? 'hsla(162, 75%, 40%, 0.15)' : 'transparent',
-                        color: isActive ? 'hsl(162, 75%, 40%)' : 'var(--text-main)',
+                        background: isActive ? 'var(--bg-surface)' : 'transparent',
+                        color: isActive ? 'var(--accent-blue)' : 'var(--text-main)',
                         border: 'none',
-                        borderRadius: '10px',
+                        borderLeft: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                        borderRadius: 0,
                         cursor: 'pointer',
                         fontWeight: isActive ? 700 : 500,
-                        fontSize: '14px',
-                        transition: 'all 0.15s ease',
+                        fontSize: '0.85rem',
+                        transition: 'var(--transition-fast)',
                         marginBottom: '2px',
+                        textAlign: 'left',
                       }}
-                      onMouseEnter={(e) => !isActive && (e.currentTarget.style.background = 'hsla(var(--hue-primary), 50%, 50%, 0.06)')}
-                      onMouseLeave={(e) => !isActive && (e.currentTarget.style.background = 'transparent')}
                     >
-                      <span style={{ color: isActive ? 'hsl(162, 75%, 40%)' : 'var(--text-muted)', display: 'flex' }}>{item.icon}</span>
-                      {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
-                      {isActive && !collapsed && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'hsl(162, 75%, 40%)' }} />}
+                      <span style={{ color: isActive ? 'var(--accent-blue)' : 'var(--text-muted)', display: 'flex' }}>
+                        {item.icon}
+                      </span>
+                      {!collapsed && (
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.label}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -304,20 +316,20 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
         </div>
 
         {/* Sidebar Footer User Info */}
-        <div style={{ padding: '12px', borderTop: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+        <div style={{ padding: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', backgroundColor: 'var(--bg-surface)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
             <div
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: '50%',
-                background: 'var(--color-secondary)',
-                color: '#fff',
+                width: 28,
+                height: 28,
+                border: '1px solid var(--border)',
+                background: 'var(--bg-card)',
+                color: 'var(--text-main)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
-                fontSize: '13px',
+                fontSize: '11px',
                 flexShrink: 0,
               }}
             >
@@ -325,11 +337,11 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
             </div>
             {!collapsed && (
               <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {user?.full_name || 'Demo User'}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                  {roles.join(', ') || 'Employee'}
+                <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                  {roles[0] || 'Employee'}
                 </div>
               </div>
             )}
@@ -341,48 +353,49 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
       <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {/* Top Header Bar */}
         <header
-          className="app-header glass-panel"
+          className="app-header"
           style={{
-            height: '68px',
+            height: '56px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 24px',
-            borderBottom: '1px solid var(--border-glass)',
+            padding: '0 20px',
+            borderBottom: '1px solid var(--border-subtle)',
+            backgroundColor: 'var(--bg-card)',
             flexShrink: 0,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               className="btn-icon mobile-only"
               onClick={() => setMobileOpen(true)}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-main)' }}
+              style={{ padding: '4px' }}
             >
-              <Menu size={22} />
+              <Menu size={18} />
             </button>
-            <h1 style={{ fontSize: '20px', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>{routeLabel}</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--text-main)', fontFamily: 'var(--font-display)' }}>
+              {routeLabel}
+            </h1>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* Theme Toggle Button */}
             <button
               className="btn-icon"
               onClick={toggleTheme}
               title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: '10px',
-                background: 'var(--bg-glass)',
-                border: '1px solid var(--border-glass)',
+                width: 32,
+                height: 32,
+                border: '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer',
                 color: 'var(--text-main)',
+                backgroundColor: 'var(--bg-card)',
               }}
             >
-              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+              {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
             </button>
 
             {/* Notification Bell */}
@@ -391,31 +404,28 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
                 className="btn-icon"
                 onClick={() => setNotifOpen(!notifOpen)}
                 style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: '10px',
-                  background: 'var(--bg-glass)',
-                  border: '1px solid var(--border-glass)',
+                  width: 32,
+                  height: 32,
+                  border: '1px solid var(--border-subtle)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer',
                   color: 'var(--text-main)',
+                  backgroundColor: 'var(--bg-card)',
                   position: 'relative',
                 }}
               >
-                <Bell size={18} />
+                <Bell size={15} />
                 {unreadCount > 0 && (
                   <span
                     style={{
                       position: 'absolute',
                       top: 4,
                       right: 4,
-                      width: 8,
-                      height: 8,
+                      width: 5,
+                      height: 5,
                       borderRadius: '50%',
-                      background: 'hsl(0, 80%, 55%)',
-                      boxShadow: '0 0 0 2px var(--bg-card)',
+                      background: 'var(--accent-red)',
                     }}
                   />
                 )}
@@ -423,45 +433,43 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
 
               {notifOpen && (
                 <div
-                  className="glass-panel"
                   style={{
                     position: 'absolute',
                     top: '100%',
                     right: 0,
                     marginTop: '8px',
-                    width: '320px',
-                    maxHeight: '380px',
+                    width: '300px',
+                    maxHeight: '340px',
                     overflowY: 'auto',
                     zIndex: 1100,
-                    borderRadius: '16px',
-                    boxShadow: 'var(--shadow-lg)',
-                    padding: '12px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--bg-card)',
+                    padding: '10px',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '14px' }}>Notifications</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{unreadCount} unread</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Notifications</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{unreadCount} unread</span>
                   </div>
                   {notifications.length === 0 ? (
-                    <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>No notifications</div>
+                    <div style={{ padding: '20px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No notifications</div>
                   ) : (
                     notifications.map((n) => (
                       <div
                         key={n._id}
                         onClick={() => !n.read && handleMarkRead(n._id)}
                         style={{
-                          padding: '10px 12px',
-                          borderRadius: '10px',
-                          background: n.read ? 'transparent' : 'hsla(var(--hue-primary), 75%, 35%, 0.08)',
-                          marginBottom: '4px',
+                          padding: '8px 10px',
+                          borderBottom: '1px solid var(--border-subtle)',
+                          background: n.read ? 'transparent' : 'var(--bg-surface)',
                           cursor: 'pointer',
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-main)' }}>{n.title}</span>
-                          {!n.read && <CheckCircle size={14} color="var(--color-primary)" />}
+                          <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-main)' }}>{n.title}</span>
+                          {!n.read && <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-blue)' }} />}
                         </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{n.message}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{n.message}</div>
                       </div>
                     ))
                   )}
@@ -476,76 +484,76 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '6px 12px',
-                  borderRadius: '10px',
-                  background: 'var(--bg-glass)',
-                  border: '1px solid var(--border-glass)',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  border: '1px solid var(--border-subtle)',
+                  backgroundColor: 'var(--bg-card)',
                   cursor: 'pointer',
                   color: 'var(--text-main)',
+                  height: 32,
+                  fontSize: '0.8rem',
+                  fontWeight: 500,
                 }}
               >
-                <span style={{ fontWeight: 600, fontSize: '13px' }}>{user?.full_name || 'Demo'}</span>
-                <span className="badge badge-neutral" style={{ fontSize: '10px', padding: '1px 6px' }}>
-                  {roles[0] || 'employee'}
-                </span>
+                <span>{user?.full_name ? user.full_name.split(' ')[0] : 'Demo'}</span>
+                <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'var(--accent-blue)' }} />
               </button>
 
               {userMenuOpen && (
                 <div
-                  className="glass-panel"
                   style={{
                     position: 'absolute',
                     top: '100%',
                     right: 0,
                     marginTop: '8px',
-                    width: '240px',
+                    width: '230px',
                     zIndex: 1100,
-                    borderRadius: '16px',
-                    boxShadow: 'var(--shadow-lg)',
-                    padding: '12px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--bg-card)',
+                    padding: '8px',
                   }}
                 >
-                  <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-glass)', marginBottom: '8px' }}>
-                    <div style={{ fontWeight: 700, fontSize: '13px' }}>{user?.full_name}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{user?.email}</div>
+                  <div style={{ padding: '8px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '8px' }}>
+                    <div style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text-main)' }}>{user?.full_name}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
                   </div>
 
                   {USE_MOCKS && (
                     <>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '4px 12px' }}>
-                        Quick Switch Demo Role
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '4px 8px', letterSpacing: '0.05em' }}>
+                        Switch Role (Demo)
                       </div>
                       {allDemoUsers.map((demoU) => {
                         const rName = typeof demoU.roles[0] === 'string' ? demoU.roles[0] : demoU.roles[0]?.role;
+                        const isCurrent = user?._id === demoU._id;
                         return (
                           <button
                             key={demoU._id}
                             onClick={() => {
                               switchUserMock(demoU._id);
                               setUserMenuOpen(false);
-                              showToast(`Switched role to ${rName} (${demoU.full_name})`, 'info');
+                              showToast(`Switched role to ${rName}`, 'info');
                             }}
                             style={{
                               width: '100%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              padding: '8px 12px',
+                              padding: '6px 8px',
                               border: 'none',
-                              background: user?._id === demoU._id ? 'hsla(var(--hue-primary), 75%, 35%, 0.12)' : 'transparent',
-                              color: user?._id === demoU._id ? 'var(--color-primary)' : 'var(--text-main)',
-                              borderRadius: '8px',
+                              background: isCurrent ? 'var(--bg-surface)' : 'transparent',
+                              color: isCurrent ? 'var(--accent-blue)' : 'var(--text-main)',
                               cursor: 'pointer',
-                              fontSize: '12px',
+                              fontSize: '11px',
                               textAlign: 'left',
+                              marginBottom: '2px',
                             }}
                           >
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <UserCheck size={14} />
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <UserCheck size={12} />
                               <span>{demoU.full_name.split(' ')[0]}</span>
                             </span>
-                            <span className="badge badge-neutral" style={{ fontSize: '10px' }}>
+                            <span className="badge" style={{ fontSize: '9px', padding: '1px 4px' }}>
                               {rName}
                             </span>
                           </button>
@@ -554,29 +562,28 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
                     </>
                   )}
 
-                  <div style={{ borderTop: '1px solid var(--border-glass)', marginTop: '8px', paddingTop: '8px' }}>
+                  <div style={{ borderTop: '1px solid var(--border-subtle)', marginTop: '8px', paddingTop: '6px' }}>
                     <button
                       onClick={() => {
                         setUserMenuOpen(false);
-                        logout();
+                        onNavigate('logout');
                       }}
                       style={{
                         width: '100%',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 12px',
+                        gap: '6px',
+                        padding: '6px 8px',
                         border: 'none',
                         background: 'transparent',
-                        color: 'hsl(0, 80%, 55%)',
-                        borderRadius: '8px',
+                        color: 'var(--accent-red)',
                         cursor: 'pointer',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: 600,
                       }}
                     >
-                      <LogOut size={15} />
-                      <span>Log out</span>
+                      <LogOut size={12} />
+                      <span>Sign Out</span>
                     </button>
                   </div>
                 </div>
@@ -587,12 +594,11 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
 
         {/* Main Route Content */}
         <main
-          className="app-main"
           style={{
             flexGrow: 1,
             overflowY: 'auto',
-            padding: '28px',
-            background: 'var(--bg-card)',
+            padding: '24px',
+            backgroundColor: 'var(--bg-app)',
             position: 'relative',
           }}
         >

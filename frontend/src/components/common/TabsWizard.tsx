@@ -16,7 +16,7 @@ export interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({ tabs, active, onChange }) => {
   return (
-    <div className="tabs-container" style={{ borderBottom: '1px solid var(--border-glass)', marginBottom: '24px', display: 'flex', gap: '8px', overflowX: 'auto' }}>
+    <div className="tabs-container" style={{ borderBottom: '1px solid var(--border-subtle)', marginBottom: '20px', display: 'flex', gap: '8px', overflowX: 'auto' }}>
       {tabs.map((t) => {
         const isActive = t.key === active;
         return (
@@ -24,19 +24,19 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, active, onChange }) => {
             key={t.key}
             onClick={() => onChange(t.key)}
             style={{
-              padding: '12px 18px',
+              padding: '10px 14px',
               border: 'none',
-              background: isActive ? 'hsla(var(--hue-primary), 75%, 35%, 0.12)' : 'transparent',
-              color: isActive ? 'var(--color-primary)' : 'var(--text-muted)',
-              borderBottom: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
+              background: 'transparent',
+              color: isActive ? 'var(--text-main)' : 'var(--text-muted)',
+              borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
               fontWeight: isActive ? 700 : 500,
-              fontSize: '14px',
+              fontSize: '0.85rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
               cursor: 'pointer',
-              borderRadius: '8px 8px 0 0',
-              transition: 'all 0.2s ease',
+              borderRadius: 0,
+              transition: 'var(--transition-fast)',
               whiteSpace: 'nowrap',
             }}
           >
@@ -45,12 +45,14 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, active, onChange }) => {
             {t.badge !== undefined && (
               <span
                 style={{
-                  background: isActive ? 'var(--color-primary)' : 'hsla(var(--hue-primary), 20%, 50%, 0.2)',
-                  color: isActive ? '#fff' : 'var(--text-muted)',
-                  fontSize: '11px',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-main)',
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: '9px',
                   fontWeight: 700,
-                  padding: '2px 6px',
-                  borderRadius: '12px',
+                  padding: '1px 5px',
+                  borderRadius: 'var(--radius)',
+                  marginLeft: '4px'
                 }}
               >
                 {t.badge}
@@ -110,7 +112,7 @@ export const Wizard: React.FC<WizardProps> = ({ steps, onComplete, onCancel, sub
   return (
     <div className="wizard-container">
       {/* Stepper Progress */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', position: 'relative' }}>
         {steps.map((s, i) => {
           const isPast = i < current;
           const isCurrent = i === current;
@@ -119,31 +121,34 @@ export const Wizard: React.FC<WizardProps> = ({ steps, onComplete, onCancel, sub
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2 }}>
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
+                    width: 30,
+                    height: 30,
+                    borderRadius: 'var(--radius)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 700,
-                    fontSize: '14px',
-                    background: isPast ? 'hsl(162, 75%, 35%)' : isCurrent ? 'hsl(215, 70%, 50%)' : 'var(--bg-glass)',
-                    color: isPast || isCurrent ? '#fff' : 'var(--text-muted)',
-                    border: isCurrent ? '2px solid hsl(215, 70%, 50%)' : '1px solid var(--border-glass)',
-                    boxShadow: isCurrent ? '0 0 0 4px hsla(215, 70%, 50%, 0.2)' : 'none',
-                    transition: 'all 0.3s ease',
+                    fontSize: '12px',
+                    background: isPast ? 'var(--bg-surface)' : isCurrent ? 'var(--bg-app)' : 'var(--bg-app)',
+                    color: isPast ? 'var(--text-main)' : isCurrent ? 'var(--accent-blue)' : 'var(--text-muted)',
+                    border: isPast
+                      ? '1px solid var(--border)'
+                      : isCurrent
+                      ? '1px solid var(--accent-blue)'
+                      : '1px solid var(--border-subtle)',
+                    transition: 'var(--transition-fast)',
                   }}
                 >
-                  {isPast ? <Check size={18} /> : i + 1}
+                  {isPast ? <Check size={14} /> : i + 1}
                 </div>
                 <span
                   style={{
-                    fontSize: '12px',
+                    fontSize: '11px',
                     fontWeight: isCurrent ? 700 : 500,
                     color: isCurrent ? 'var(--text-main)' : 'var(--text-muted)',
-                    marginTop: '6px',
+                    marginTop: '4px',
                     textAlign: 'center',
-                    maxWidth: '100px',
+                    maxWidth: '90px',
                   }}
                 >
                   {s.title}
@@ -153,11 +158,11 @@ export const Wizard: React.FC<WizardProps> = ({ steps, onComplete, onCancel, sub
                 <div
                   style={{
                     flexGrow: 1,
-                    height: '2px',
-                    background: isPast ? 'hsl(162, 75%, 35%)' : 'var(--border-glass)',
-                    margin: '0 12px',
-                    transform: 'translateY(-12px)',
-                    transition: 'all 0.3s ease',
+                    height: '1px',
+                    background: isPast ? 'var(--accent-blue)' : 'var(--border-subtle)',
+                    margin: '0 8px',
+                    transform: 'translateY(-10px)',
+                    transition: 'var(--transition-fast)',
                   }}
                 />
               )}
@@ -167,20 +172,20 @@ export const Wizard: React.FC<WizardProps> = ({ steps, onComplete, onCancel, sub
       </div>
 
       {errorMsg && (
-        <div style={{ padding: '12px 16px', borderRadius: '8px', background: 'hsla(0, 80%, 55%, 0.12)', color: 'hsl(0, 80%, 55%)', fontSize: '13px', fontWeight: 600, marginBottom: '20px' }}>
+        <div style={{ padding: '10px 14px', border: '1px solid var(--accent-red)', borderRadius: 'var(--radius)', background: 'var(--bg-card)', color: 'var(--accent-red)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '16px' }}>
           {errorMsg}
         </div>
       )}
 
       {/* Step Body */}
-      <div className="wizard-step-content" style={{ minHeight: '260px', marginBottom: '24px' }}>
-        <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '6px' }}>{steps[current].title}</h4>
-        {steps[current].description && <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>{steps[current].description}</p>}
+      <div className="wizard-step-content" style={{ minHeight: '220px', marginBottom: '20px' }}>
+        <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '4px', fontFamily: 'var(--font-display)' }}>{steps[current].title}</h4>
+        {steps[current].description && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>{steps[current].description}</p>}
         {steps[current].render()}
       </div>
 
       {/* Wizard Footer Actions */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-glass)', paddingTop: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
         <div>
           {onCancel && (
             <button type="button" className="btn btn-secondary" onClick={onCancel}>
@@ -188,16 +193,16 @@ export const Wizard: React.FC<WizardProps> = ({ steps, onComplete, onCancel, sub
             </button>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" className="btn btn-secondary" disabled={current === 0} onClick={handleBack} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ChevronLeft size={16} /> Back
+            <ChevronLeft size={14} /> Back
           </button>
           <button type="button" className="btn btn-primary" onClick={handleNext} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             {current === steps.length - 1 ? (
               <span>{submitLabel}</span>
             ) : (
               <>
-                <span>Next</span> <ChevronRight size={16} />
+                <span>Next</span> <ChevronRight size={14} />
               </>
             )}
           </button>
