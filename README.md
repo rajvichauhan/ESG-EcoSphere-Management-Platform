@@ -130,3 +130,8 @@ To maintain high architectural integrity, all codebase contributions must adhere
 3. **Audit Provenance:** Carbon ledger entries must snapshot the calculation parameters, input quantities, and factor constants used at the time of entry to ensure complete audit traceability.
 4. **Dynamic State Derivation:** Derived values—such as challenge progress percentages, department carbon rollups, or compliance overdue markers—must be calculated at query time to prevent out-of-sync cache bugs.
 5. **No Data Deletions:** Archive statuses or soft-deletes are used instead of physical document removals for compliance and transactional audit records.
+
+## Team Members
+1. Leader: Rajvi Chauhan
+2. Shail K Patel
+3. Aditi Maurya
