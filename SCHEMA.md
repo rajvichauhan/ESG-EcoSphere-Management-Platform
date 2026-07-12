@@ -290,12 +290,15 @@ Indexes: `{challenge_id:1, user_id:1}` unique; `{"certificate.share_token":1}` u
 ### `xp_ledger` — source of truth; user counters are cached rollups
 ```js
 { _id, org_id, user_id,
-  xp_delta, points_delta,          // points_delta negative on redemption
+  department_id: ObjectId|null,    // user's dept at earn time — dept leaderboards stay correct
+  xp_delta, points_delta,          //   even if the user later moves departments
   reason: "challenge_completed"|"csr_approved"|"training_completed"
         | "badge_awarded"|"reward_redeemed"|"admin_adjustment",
   source_ref: { collection, id }, created_at }
 ```
-Indexes: `{user_id:1, created_at:-1}`; `{org_id:1, created_at:-1}` (monthly leaderboards).
+Indexes: `{user_id:1, created_at:-1}`; `{org_id:1, department_id:1, created_at:-1}`
+(wireframe leaderboard ranks both employees and departments; monthly = ledger aggregation,
+all-time employee = `users.xp_total`).
 
 ### `user_badges`
 ```js
