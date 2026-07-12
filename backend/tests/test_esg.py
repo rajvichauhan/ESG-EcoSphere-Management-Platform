@@ -19,89 +19,86 @@ from app.models.common import utcnow
 import asyncio
 
 @pytest.fixture
-def test_data(event_loop):
-    async def _setup():
-        try:
-            from app.db import get_db
-            db = get_db()
-        except RuntimeError:
-            import app.db as app_db
-            await app_db.connect()
-            db = app_db.get_db()
-        now = utcnow()
+async def test_data():
+    try:
+        from app.db import get_db
+        db = get_db()
+    except RuntimeError:
+        import app.db as app_db
+        await app_db.connect()
+        db = app_db.get_db()
+    now = utcnow()
 
-        # Clear prior data
-        for col in ["organizations", "users", "departments", "city_profiles", "facilities", "facility_readings", "carbon_reference", "reference_value_history", "products", "product_sales", "overhead_allocations", "product_links", "carbon_transactions"]:
-            await db[col].delete_many({})
+    # Clear prior data
+    for col in ["organizations", "users", "departments", "city_profiles", "facilities", "facility_readings", "carbon_reference", "reference_value_history", "products", "product_sales", "overhead_allocations", "product_links", "carbon_transactions"]:
+        await db[col].delete_many({})
 
-        # 1. Tenant Org
-        org_id = ObjectId()
-        await db.organizations.insert_one({
-            "_id": org_id,
-            "name": "Test Org",
-            "type": "corporate",
-            "status": "active",
-            "settings": {"esg_weights": {"e": 40, "s": 30, "g": 30}},
-            "created_at": now, "updated_at": now,
-        })
+    # 1. Tenant Org
+    org_id = ObjectId()
+    await db.organizations.insert_one({
+        "_id": org_id,
+        "name": "Test Org",
+        "type": "corporate",
+        "status": "active",
+        "settings": {"esg_weights": {"e": 40, "s": 30, "g": 30}},
+        "created_at": now, "updated_at": now,
+    })
 
-        # 2. Master Admin User
-        master_id = ObjectId()
-        await db.users.insert_one({
-            "_id": master_id,
-            "org_id": org_id,
-            "email": "master@test.com",
-            "password_hash": hash_password("pass"),
-            "full_name": "Master",
-            "roles": [{"role": "master_admin"}],
-            "status": "active",
-            "created_at": now, "updated_at": now,
-        })
+    # 2. Master Admin User
+    master_id = ObjectId()
+    await db.users.insert_one({
+        "_id": master_id,
+        "org_id": org_id,
+        "email": "master@test.com",
+        "password_hash": hash_password("pass"),
+        "full_name": "Master",
+        "roles": [{"role": "master_admin"}],
+        "status": "active",
+        "created_at": now, "updated_at": now,
+    })
 
-        # 3. Regular Org Admin
-        admin_id = ObjectId()
-        await db.users.insert_one({
-            "_id": admin_id,
-            "org_id": org_id,
-            "email": "admin@test.com",
-            "password_hash": hash_password("pass"),
-            "full_name": "Admin",
-            "roles": [{"role": "org_admin"}],
-            "status": "active",
-            "created_at": now, "updated_at": now,
-        })
+    # 3. Regular Org Admin
+    admin_id = ObjectId()
+    await db.users.insert_one({
+        "_id": admin_id,
+        "org_id": org_id,
+        "email": "admin@test.com",
+        "password_hash": hash_password("pass"),
+        "full_name": "Admin",
+        "roles": [{"role": "org_admin"}],
+        "status": "active",
+        "created_at": now, "updated_at": now,
+    })
 
-        # 4. Plain Employee
-        emp_id = ObjectId()
-        await db.users.insert_one({
-            "_id": emp_id,
-            "org_id": org_id,
-            "email": "emp@test.com",
-            "password_hash": hash_password("pass"),
-            "full_name": "Employee",
-            "roles": [{"role": "employee"}],
-            "status": "active",
-            "created_at": now, "updated_at": now,
-        })
+    # 4. Plain Employee
+    emp_id = ObjectId()
+    await db.users.insert_one({
+        "_id": emp_id,
+        "org_id": org_id,
+        "email": "emp@test.com",
+        "password_hash": hash_password("pass"),
+        "full_name": "Employee",
+        "roles": [{"role": "employee"}],
+        "status": "active",
+        "created_at": now, "updated_at": now,
+    })
 
-        # JWT Tokens
-        master_token = create_access_token(str(master_id), str(org_id))
-        admin_token = create_access_token(str(admin_id), str(org_id))
-        emp_token = create_access_token(str(emp_id), str(org_id))
+    # JWT Tokens
+    master_token = create_access_token(str(master_id), str(org_id))
+    admin_token = create_access_token(str(admin_id), str(org_id))
+    emp_token = create_access_token(str(emp_id), str(org_id))
 
-        return {
-            "org_id": org_id,
-            "master_id": master_id,
-            "admin_id": admin_id,
-            "emp_id": emp_id,
-            "headers": {
-                "master": {"Authorization": f"Bearer {master_token}"},
-                "admin": {"Authorization": f"Bearer {admin_token}"},
-                "emp": {"Authorization": f"Bearer {emp_token}"},
-            },
-        }
-
-    return event_loop.run_until_complete(_setup())
+    return {
+        "org_id": org_id,
+        "master_id": master_id,
+        "admin_id": admin_id,
+        "emp_id": emp_id,
+        "headers": {
+            "master": {"Authorization": f"Bearer {master_token}"},
+            "admin": {"Authorization": f"Bearer {admin_token}"},
+            "emp": {"Authorization": f"Bearer {emp_token}"},
+        },
+    }
 
 
 # ---------------------------------------------------------------------------

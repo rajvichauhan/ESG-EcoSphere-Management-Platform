@@ -56,6 +56,11 @@ async def ensure_indexes() -> None:
         [("org_id", 1), ("policy_group_id", 1), ("version", -1)],
     )
 
+    # Policy comments
+    await db.policy_comments.create_index(
+        [("policy_id", 1), ("created_at", -1)],
+    )
+
     # ------------------------------------------------------------------
     # Transactional Data  (Phases 5–10)
     # ------------------------------------------------------------------

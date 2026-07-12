@@ -5,6 +5,7 @@ or absolute paths are hardcoded anywhere else in the codebase.
 """
 from functools import lru_cache
 
+from pydantic import Field, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,7 +21,7 @@ class Settings(BaseSettings):
 
     # MongoDB
     mongodb_uri: str = "mongodb://localhost:27017/?replicaSet=rs0"
-    mongodb_db: str = "ecosphere"
+    mongodb_db_name: str = Field("ecosphere", validation_alias=AliasChoices("mongodb_db_name", "mongodb_db"))
 
     # Auth (used from Phase 2)
     jwt_secret: str = "change-me"
@@ -38,8 +39,8 @@ class Settings(BaseSettings):
     file_storage_backend: str = "local"
     file_storage_local_dir: str = "./uploads"
     b2_key_id: str = ""
-    b2_app_key: str = ""
-    b2_bucket: str = ""
+    b2_app_key: str = Field("", validation_alias=AliasChoices("b2_app_key", "b2_application_key"))
+    b2_bucket: str = Field("", validation_alias=AliasChoices("b2_bucket", "b2_bucket_name"))
     b2_endpoint: str = ""
 
 

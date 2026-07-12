@@ -22,6 +22,7 @@ from app.routers import (
     allocations,
     product_links,
     sub_admins,
+    policies,
 )
 
 
@@ -63,6 +64,8 @@ def create_app() -> FastAPI:
     app.include_router(product_links.router, prefix=settings.api_prefix)
     app.include_router(sub_admins.router, prefix=settings.api_prefix)
     app.include_router(sub_admins.me_router, prefix=settings.api_prefix)
+    app.include_router(policies.router, prefix=settings.api_prefix)
+    app.include_router(policies.acknowledgements_router, prefix=settings.api_prefix)
 
     @app.get("/")
     async def root() -> dict:

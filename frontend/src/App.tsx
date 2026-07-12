@@ -17,14 +17,20 @@ import {
   GamificationPage,
   ReportsPage,
   OrgSetupPage,
+  PublicPoliciesPage,
 } from './pages';
 
 const MainContent: React.FC = () => {
   const { user } = useAuth();
   const [route, setRoute] = useState<string>('dashboard');
+  const [publicView, setPublicView] = useState<boolean>(false);
 
-  if (!user) {
-    return <AuthPage onSuccess={() => setRoute('dashboard')} />;
+  if (!user && !publicView) {
+    return <AuthPage onSuccess={() => setRoute('dashboard')} onViewPublicPolicies={() => setPublicView(true)} />;
+  }
+
+  if (publicView) {
+    return <PublicPoliciesPage onBackToLogin={() => setPublicView(false)} />;
   }
 
   const renderPage = () => {

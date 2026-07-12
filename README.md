@@ -121,7 +121,34 @@ Environment configurations are managed using environment variables. To configure
 
 ---
 
-## 5. System Design Conventions & Rules
+## 5. Testing Credentials & Role Seeding
+
+To verify different user roles and test the platform functionalities, you can seed the database with test accounts by running:
+```bash
+cd backend
+# On Windows PowerShell:
+$env:PYTHONPATH="."
+.venv\Scripts\python seed_roles.py
+
+# On Linux/macOS:
+export PYTHONPATH="."
+venv/bin/python seed_roles.py
+```
+
+This populates the database with the following role-specific test credentials:
+
+| Role | Email / Username | Password | Full Name |
+| :--- | :--- | :--- | :--- |
+| **Master Admin** | `master@ecosphere.local` | `masterpassword` | EcoSphere Master Admin |
+| **Org Admin** | `orgadmin@ecosphere.local` | `adminpassword` | Corporate Org Admin |
+| **Sub Admin** (Region: IN) | `subadmin@ecosphere.local` | `subadminpassword` | Regional Sub Admin |
+| **Department Head** | `depthead@ecosphere.local` | `deptheadpassword` | Department Manager Jenkins |
+| **Employee** | `employee@ecosphere.local` | `employeepassword` | Jane Employee Doe |
+| **NGO Member** | `ngo@ecosphere.local` | `ngopassword` | NGO Alliance Rep |
+
+---
+
+## 6. System Design Conventions & Rules
 
 To maintain high architectural integrity, all codebase contributions must adhere to the following rules:
 

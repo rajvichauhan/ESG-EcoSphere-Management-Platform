@@ -3,7 +3,7 @@ import { TreePine, Lock, Mail, User, Building, ArrowRight, ShieldCheck, CheckCir
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-export const AuthPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
+export const AuthPage: React.FC<{ onSuccess: () => void; onViewPublicPolicies?: () => void }> = ({ onSuccess, onViewPublicPolicies }) => {
   const { login, verifyOtp, register } = useAuth();
   const { showToast } = useToast();
 
@@ -246,13 +246,28 @@ export const AuthPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
             </button>
 
             {mode === 'login' && (
-              <div style={{ marginTop: '20px', padding: '12px', borderRadius: '12px', background: 'hsla(var(--hue-primary), 30%, 50%, 0.05)', border: '1px dashed var(--border-glass)', fontSize: '12px', color: 'var(--text-muted)' }}>
-                <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>🚀 Instant Demo Accounts:</div>
-                <div>• Master Admin: <code style={{ color: 'var(--color-primary)' }}>master@ecosphere.demo</code></div>
-                <div>• Org Admin: <code style={{ color: 'var(--color-primary)' }}>orgadmin@ecosphere.demo</code></div>
-                <div>• Dept Head: <code style={{ color: 'var(--color-primary)' }}>depthead@ecosphere.demo</code></div>
-                <div style={{ marginTop: '4px', fontStyle: 'italic' }}>Any password works (`password123`). OTP demo code: `123456`.</div>
-              </div>
+              <>
+                <div style={{ marginTop: '20px', padding: '12px', borderRadius: '12px', background: 'hsla(var(--hue-primary), 30%, 50%, 0.05)', border: '1px dashed var(--border-glass)', fontSize: '12px', color: 'var(--text-muted)' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>🚀 Instant Demo Accounts:</div>
+                  <div>• Master Admin: <code style={{ color: 'var(--color-primary)' }}>master@ecosphere.demo</code></div>
+                  <div>• Org Admin: <code style={{ color: 'var(--color-primary)' }}>orgadmin@ecosphere.demo</code></div>
+                  <div>• Dept Head: <code style={{ color: 'var(--color-primary)' }}>depthead@ecosphere.demo</code></div>
+                  <div style={{ marginTop: '4px', fontStyle: 'italic' }}>Any password works (`password123`). OTP demo code: `123456`.</div>
+                </div>
+
+                {onViewPublicPolicies && (
+                  <div style={{ margin: '20px 0 10px 0', borderTop: '1px solid var(--border-glass)', paddingTop: '16px', textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={onViewPublicPolicies}
+                      className="btn btn-secondary"
+                      style={{ width: '100%', padding: '10px 14px', fontSize: '13px', fontWeight: 600 }}
+                    >
+                      View Public Policies & Governance (NGO/Public)
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </form>
         ) : (

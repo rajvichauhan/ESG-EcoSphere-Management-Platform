@@ -12,3 +12,5 @@ export { AuditsPage } from './AuditsPage';
 export { GamificationPage } from './GamificationPage';
 export { ReportsPage } from './ReportsPage';
 export { OrgSetupPage } from './OrgSetupPage';
+export { PublicPoliciesPage } from './PublicPoliciesPage';
+

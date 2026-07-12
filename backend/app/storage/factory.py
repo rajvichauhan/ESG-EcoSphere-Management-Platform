@@ -17,7 +17,11 @@ def get_storage() -> StorageBackend:
     if backend == "local":
         return LocalStorage(settings.file_storage_local_dir)
     if backend == "b2":
-        raise NotImplementedError(
-            "Backblaze B2 backend arrives with Phase 4 file handling / migration."
+        from app.storage.b2 import B2Storage
+        return B2Storage(
+            key_id=settings.b2_key_id,
+            app_key=settings.b2_app_key,
+            endpoint=settings.b2_endpoint,
+            bucket_name=settings.b2_bucket,
         )
     raise ValueError(f"Unknown FILE_STORAGE_BACKEND: {settings.file_storage_backend!r}")

@@ -21,8 +21,7 @@ def event_loop():
 @pytest.fixture(scope="session", autouse=True)
 async def setup_db():
     settings = get_settings()
-    # Override database name for tests to prevent clobbering production/dev data
-    settings.mongodb_db = "ecosphere_test"
+    settings.mongodb_db_name = "ecosphere_test"
     # Remove replica set parameter for standalone local MongoDB instances in test environments
     if "?replicaSet=" in settings.mongodb_uri:
         settings.mongodb_uri = settings.mongodb_uri.split("?")[0]

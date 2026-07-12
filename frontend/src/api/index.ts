@@ -1685,6 +1685,40 @@ export const governanceApi = {
       throw err;
     }
   },
+  getComments: async (policy_id: string): Promise<any[]> => {
+    try {
+      const res = await apiClient.get(`/policies/${policy_id}/comments`);
+      return res.data;
+    } catch (err) {
+      if (isNetworkError(err)) {
+        await delay(100);
+        const allComments = MockStorage.get<any[]>('policy_comments', []);
+        return allComments.filter((c) => c.policy_id === policy_id);
+      }
+      throw err;
+    }
+  },
+  createComment: async (policy_id: string, data: any): Promise<any> => {
+    try {
+      const res = await apiClient.post(`/policies/${policy_id}/comments`, data);
+      return res.data;
+    } catch (err) {
+      if (isNetworkError(err)) {
+        await delay(150);
+        const allComments = MockStorage.get<any[]>('policy_comments', []);
+        const newComment = {
+          ...data,
+          _id: `comment_${Date.now()}`,
+          policy_id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        MockStorage.set('policy_comments', [...allComments, newComment]);
+        return newComment;
+      }
+      throw err;
+    }
+  },
   getAudits: async (): Promise<AuditRecord[]> => {
     try {
       const res = await apiClient.get('/audits');
@@ -2083,6 +2117,8 @@ export const policiesApi = {
   list: async () => governanceApi.getPolicies(),
   create: async (data: any) => governanceApi.createPolicy(data),
   acknowledge: async (id: string) => governanceApi.acknowledgePolicy(id),
+  getComments: async (policyId: string) => governanceApi.getComments(policyId),
+  createComment: async (policyId: string, data: any) => governanceApi.createComment(policyId, data),
 };
 
 export const auditsApi = {

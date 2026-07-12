@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Plus, Eye, FileText, CheckSquare, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Plus, Eye, FileText, CheckSquare, AlertTriangle, MessageSquare, Send } from 'lucide-react';
 import { policiesApi } from '../api';
 import { DataTable, StatusBadge, Modal, FilePreview } from '../components/common';
 import type { Policy } from '../types';
@@ -19,6 +19,13 @@ export const PoliciesPage: React.FC = () => {
 
   // Preview Modal
   const [previewFile, setPreviewFile] = useState<{ url: string | null; name: string }>({ url: null, name: '' });
+
+  // Comments & Policy Detail Modal
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentContent, setCommentContent] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -51,6 +58,54 @@ export const PoliciesPage: React.FC = () => {
       loadData();
     } catch {
       showToast('Could not save policy', 'error');
+    }
+  };
+
+  const handleSelectPolicy = async (p: Policy) => {
+    setSelectedPolicy(p);
+    setLoadingComments(true);
+    try {
+      const list = await policiesApi.getComments(p._id);
+      setComments(list);
+    } catch {
+      showToast('Could not load comments', 'error');
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handlePostComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPolicy || !commentContent.trim()) return;
+    setSubmittingComment(true);
+    try {
+      await policiesApi.createComment(selectedPolicy._id, {
+        author_name: '',
+        author_email: '',
+        author_role: '',
+        content: commentContent.trim(),
+      });
+      showToast('Comment posted successfully!', 'success');
+      setCommentContent('');
+      const list = await policiesApi.getComments(selectedPolicy._id);
+      setComments(list);
+    } catch {
+      showToast('Failed to post comment', 'error');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleAcknowledge = async (p: Policy) => {
+    try {
+      await policiesApi.acknowledge(p._id);
+      showToast('Policy acknowledged successfully!', 'success');
+      if (selectedPolicy && selectedPolicy._id === p._id) {
+        setSelectedPolicy({ ...selectedPolicy, user_acknowledged: true });
+      }
+      loadData();
+    } catch {
+      showToast('Could not acknowledge policy', 'error');
     }
   };
 
@@ -91,11 +146,11 @@ export const PoliciesPage: React.FC = () => {
                 <CheckSquare size={16} /> 96% Employee Acknowledged
               </div>
               <button
-                onClick={() => setPreviewFile({ url: p.document_url || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', name: `${p.title}.pdf` })}
+                onClick={() => handleSelectPolicy(p)}
                 className="btn btn-secondary"
                 style={{ padding: '6px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <Eye size={14} /> Preview Document
+                <Eye size={14} /> Open & Comment
               </button>
             </div>
           </div>
@@ -118,11 +173,11 @@ export const PoliciesPage: React.FC = () => {
               align: 'right',
               render: (p) => (
                 <button
-                  onClick={() => setPreviewFile({ url: p.document_url || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', name: `${p.title}.pdf` })}
+                  onClick={() => handleSelectPolicy(p)}
                   className="btn btn-secondary"
                   style={{ padding: '4px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}
                 >
-                  <Eye size={13} /> Open File
+                  <Eye size={13} /> Open
                 </button>
               ),
             },
@@ -165,6 +220,102 @@ export const PoliciesPage: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Policy Details & Commenting Modal */}
+      {selectedPolicy && (
+        <Modal
+          open={!!selectedPolicy}
+          title={selectedPolicy.title}
+          onClose={() => setSelectedPolicy(null)}
+          maxWidth="700px"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <span className="badge badge-neutral">{selectedPolicy.category || selectedPolicy.group}</span>
+                <span className="badge badge-neutral">v{selectedPolicy.version}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {!selectedPolicy.user_acknowledged ? (
+                  <button
+                    onClick={() => handleAcknowledge(selectedPolicy)}
+                    className="btn btn-primary"
+                    style={{ padding: '6px 14px', fontSize: '13px' }}
+                  >
+                    Acknowledge Policy
+                  </button>
+                ) : (
+                  <span className="badge badge-success" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+                    <CheckSquare size={13} /> Acknowledged
+                  </span>
+                )}
+                <button
+                  onClick={() => setPreviewFile({ url: selectedPolicy.document_url || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', name: `${selectedPolicy.title}.pdf` })}
+                  className="btn btn-secondary"
+                  style={{ padding: '6px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Eye size={14} /> Preview Document
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px' }}>SUMMARY</h4>
+              <p style={{ fontSize: '14px', color: 'var(--text-main)', lineHeight: 1.5, padding: '12px 16px', background: 'var(--bg-glass)', borderRadius: '8px', border: '1px solid var(--border-glass)', margin: 0 }}>
+                {selectedPolicy.body_text || 'No preview summary text available for this policy document.'}
+              </p>
+            </div>
+
+            {/* Comments List */}
+            <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '16px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <MessageSquare size={16} /> Comments ({comments.length})
+              </h4>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', marginBottom: '16px' }}>
+                {loadingComments ? (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center' }}>Loading comments...</div>
+                ) : comments.length === 0 ? (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '16px', border: '1px dashed var(--border-glass)', borderRadius: '8px' }}>
+                    No comments yet. Write a comment to share your views.
+                  </div>
+                ) : (
+                  comments.map((c) => (
+                    <div key={c._id} className="glass-card" style={{ padding: '10px 14px', borderRadius: '10px', background: 'hsla(var(--hue-primary), 20%, 50%, 0.01)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{c.author_name || 'Anonymous'}</span>
+                        <span className="badge badge-neutral" style={{ fontSize: '9px', padding: '1px 6px' }}>{c.author_role}</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>{c.content}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add Comment Form */}
+              <form onSubmit={handlePostComment} style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="text"
+                  required
+                  placeholder="Share a comment on this policy..."
+                  className="input"
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  style={{ flexGrow: 1, fontSize: '13px' }}
+                />
+                <button
+                  type="submit"
+                  disabled={submittingComment}
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', padding: '0 16px' }}
+                >
+                  <Send size={14} /> Send
+                </button>
+              </form>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* File Preview */}
       <FilePreview url={previewFile.url} fileName={previewFile.name} onClose={() => setPreviewFile({ url: null, name: '' })} />
