@@ -1,0 +1,15 @@
+# Phase 1 — Foundation
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+motor==3.6.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+
+# Dev / test
+httpx==0.28.1                   # TestClient for endpoint verification
+
+# Reserved for later phases (kept here so setup is one-time):
+# passlib[bcrypt]==1.7.4        # Phase 2 — password hashing
+# python-jose[cryptography]==3.3.0  # Phase 2 — JWT access tokens
+# email-validator==2.2.0        # Phase 2 — user email validation

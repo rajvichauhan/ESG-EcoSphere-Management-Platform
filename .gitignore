@@ -6,6 +6,8 @@
 .env.production.local
 *.env
 
+backend/esg/Lib
+
 # Python virtual environments
 .venv/
 venv/
