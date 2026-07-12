@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { notificationsApi } from '../../api';
+import { notificationsApi, USE_MOCKS } from '../../api';
 import type { AppNotification } from '../../types';
 import { MockStorage } from '../../api/mockData';
 
@@ -511,44 +511,48 @@ export const AppShell: React.FC<AppShellProps> = ({ activeRoute, onNavigate, chi
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{user?.email}</div>
                   </div>
 
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '4px 12px' }}>
-                    Quick Switch Demo Role
-                  </div>
-                  {allDemoUsers.map((demoU) => {
-                    const rName = typeof demoU.roles[0] === 'string' ? demoU.roles[0] : demoU.roles[0]?.role;
-                    return (
-                      <button
-                        key={demoU._id}
-                        onClick={() => {
-                          switchUserMock(demoU._id);
-                          setUserMenuOpen(false);
-                          showToast(`Switched role to ${rName} (${demoU.full_name})`, 'info');
-                        }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '8px 12px',
-                          border: 'none',
-                          background: user?._id === demoU._id ? 'hsla(var(--hue-primary), 75%, 35%, 0.12)' : 'transparent',
-                          color: user?._id === demoU._id ? 'var(--color-primary)' : 'var(--text-main)',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          textAlign: 'left',
-                        }}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <UserCheck size={14} />
-                          <span>{demoU.full_name.split(' ')[0]}</span>
-                        </span>
-                        <span className="badge badge-neutral" style={{ fontSize: '10px' }}>
-                          {rName}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {USE_MOCKS && (
+                    <>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '4px 12px' }}>
+                        Quick Switch Demo Role
+                      </div>
+                      {allDemoUsers.map((demoU) => {
+                        const rName = typeof demoU.roles[0] === 'string' ? demoU.roles[0] : demoU.roles[0]?.role;
+                        return (
+                          <button
+                            key={demoU._id}
+                            onClick={() => {
+                              switchUserMock(demoU._id);
+                              setUserMenuOpen(false);
+                              showToast(`Switched role to ${rName} (${demoU.full_name})`, 'info');
+                            }}
+                            style={{
+                              width: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 12px',
+                              border: 'none',
+                              background: user?._id === demoU._id ? 'hsla(var(--hue-primary), 75%, 35%, 0.12)' : 'transparent',
+                              color: user?._id === demoU._id ? 'var(--color-primary)' : 'var(--text-main)',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              textAlign: 'left',
+                            }}
+                          >
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <UserCheck size={14} />
+                              <span>{demoU.full_name.split(' ')[0]}</span>
+                            </span>
+                            <span className="badge badge-neutral" style={{ fontSize: '10px' }}>
+                              {rName}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </>
+                  )}
 
                   <div style={{ borderTop: '1px solid var(--border-glass)', marginTop: '8px', paddingTop: '8px' }}>
                     <button

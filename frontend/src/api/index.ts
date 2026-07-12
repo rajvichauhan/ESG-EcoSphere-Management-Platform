@@ -40,13 +40,22 @@ initMockState();
 
 const delay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * The offline/mock fallback is OFF unless VITE_USE_MOCKS === 'true'. In a real
+ * deployment the app talks only to the backend and surfaces its real responses.
+ *
+ * Even when enabled, mocks serve ONLY when the server was truly unreachable
+ * (`offline`) — never in place of a real 4xx/5xx (including 404), which must
+ * always reach the UI. This is what makes the audited backend's validation,
+ * permission, and not-found behaviour visible to the user instead of being
+ * silently replaced by fabricated data.
+ */
+export const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
+
 function isNetworkError(err: any): boolean {
-  return (
-    !err.response ||
-    err.code === 'ERR_NETWORK' ||
-    err.code === 'ECONNREFUSED' ||
-    err.response.status === 404
-  );
+  if (!USE_MOCKS) return false;
+  // `offline` is set by mapApiError when no HTTP response was received.
+  return err?.offline === true || err?.code === 'ERR_NETWORK' || err?.code === 'ECONNABORTED';
 }
 
 // ---------------------------------------------------------

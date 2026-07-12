@@ -124,11 +124,18 @@ export function handleHardLogout() {
 }
 
 export function mapApiError(error: AxiosError<{ detail?: string; message?: string }>): ApiError {
-  const status = error.response?.status || 500;
+  // `offline` = the request never received an HTTP response (server unreachable,
+  // DNS failure, timeout, CORS block). This is the ONLY condition under which the
+  // explicit offline/mock fallback may serve local data. A real 4xx/5xx from the
+  // server is NOT offline and must surface to the UI unchanged.
+  const offline = !error.response;
+  const status = error.response?.status || 0;
   const detail =
     error.response?.data?.detail ||
     error.response?.data?.message ||
-    error.message ||
+    (offline
+      ? 'Could not reach the server. Check your connection and try again.'
+      : error.message) ||
     'An unexpected error occurred while processing the request.';
-  return { status, detail };
+  return { status, detail, offline };
 }

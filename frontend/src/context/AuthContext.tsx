@@ -30,38 +30,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedUser = localStorage.getItem('ecosphere_user');
       const refreshToken = getRefreshToken();
 
+      // A session is restored ONLY when both a stored user and a refresh token
+      // exist. Without a valid refresh token no authenticated API call can
+      // succeed, so we must not present an authenticated shell. Anonymous
+      // visitors fall through to the login screen — we never auto-create a
+      // session (that would silently grant access without authentication).
       if (storedUser && refreshToken) {
         try {
-          const parsed: User = JSON.parse(storedUser);
-          setUser(parsed);
-          // Silently refresh token / fetch me in background
-          authApi.getMe().then((me) => {
-            setUser(me);
-            localStorage.setItem('ecosphere_user', JSON.stringify(me));
-          }).catch(() => {
-            // keep stored user if offline
-          });
+          setUser(JSON.parse(storedUser)); // optimistic; corrected by getMe below
         } catch {
           handleHardLogout();
+          setIsLoading(false);
+          return;
         }
-      } else if (storedUser) {
-        // mock offline user
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch {
-          setUser(null);
-        }
-      } else {
-        // Auto-seed initial demo user so standalone tester immediately has org_admin session if no token
-        const users = MockStorage.get<User[]>('users', []);
-        const defaultUser = users[1] || users[0]; // org_admin
-        if (defaultUser && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-          setUser(defaultUser);
-          setAccessToken('demo_jwt_access_token');
-          localStorage.setItem('ecosphere_user', JSON.stringify(defaultUser));
-          localStorage.setItem('ecosphere_refresh_token', 'demo_refresh_token');
-        }
+        // Re-validate against the server. The 401 interceptor refreshes the
+        // access token transparently; if the refresh token is dead it triggers
+        // a hard logout back to /login.
+        authApi
+          .getMe()
+          .then((me) => {
+            setUser(me);
+            localStorage.setItem('ecosphere_user', JSON.stringify(me));
+          })
+          .catch(() => {
+            /* interceptor handles hard-logout on refresh failure */
+          });
       }
+
       setIsLoading(false);
     };
 

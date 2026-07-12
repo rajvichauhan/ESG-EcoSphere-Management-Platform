@@ -38,6 +38,10 @@ export interface AuthResponse {
 export interface ApiError {
   status: number;
   detail: string;
+  /** True only when the request never got an HTTP response (server unreachable),
+   *  as opposed to the server returning a 4xx/5xx. Used to decide whether the
+   *  explicit offline/mock fallback may engage. */
+  offline?: boolean;
 }
 
 export interface TreeNode {
